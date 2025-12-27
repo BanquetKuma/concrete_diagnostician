@@ -1,0 +1,54 @@
+{
+  "name": "Claude Code Env",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "bradlc.vscode-tailwindcss",
+        "msjsdiag.vscode-react-native",
+        "dsznajder.es7-react-js-snippets",
+        "GitHub.copilot",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "typescript.preferences.importModuleSpecifier": "non-relative"
+      }
+    }
+  },
+
+  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install && pip install -r scripts/gemini_rag/requirements.txt 2>/dev/null || true",
+
+  "forwardPorts": [8081, 19000, 19001, 19002],
+
+  "portsAttributes": {
+    "8081": {
+      "label": "Metro Bundler",
+      "onAutoForward": "notify"
+    },
+    "19000": {
+      "label": "Expo DevTools",
+      "onAutoForward": "notify"
+    },
+    "19001": {
+      "label": "Expo Packager",
+      "onAutoForward": "notify"
+    },
+    "19002": {
+      "label": "Expo Web",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "containerEnv": {
+    "EXPO_DEVTOOLS_LISTEN_ADDRESS": "0.0.0.0"
+  }
+}

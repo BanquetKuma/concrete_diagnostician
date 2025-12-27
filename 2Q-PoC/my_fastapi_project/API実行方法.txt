@@ -1,6 +1,0 @@
-＜ローカルから実行する場合＞
-①python Response_generation_by_RAG_FastAPI.py　でAPIサーバー立ち上げ
-②http://localhost:8000/docs　でFastAPIサーバーに接続
-③
-
-＜azure Web Appsから実行する場合＞

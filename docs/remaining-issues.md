@@ -6,7 +6,40 @@
 
 ## 未解決の課題
 
-*現在、未解決の課題はありません。*
+### GIT-001: RAG用巨大ファイルはgit管理対象外
+
+| 項目 | 内容 |
+|------|------|
+| 発見日 | 2025-12-28 |
+| 優先度 | 高 |
+| ステータス | 注意事項として記録 |
+
+#### 概要
+
+RAG（Retrieval-Augmented Generation）用の教科書PDFファイルはGitHubの100MBファイルサイズ制限を超えるため、git管理対象外とする。
+
+#### 対象ファイル
+
+- `data/all/*.pdf` - 教科書PDF（352MB等）
+- `data/*.pdf` - その他の大容量PDF
+
+#### .gitignoreの設定
+
+```gitignore
+# PDF files (copyright protected textbooks)
+data/**/*.pdf
+```
+
+#### 注意事項
+
+1. **新しいPDFを追加する際は `git add` しないこと**
+2. 誤って `git add` した場合は `git rm --cached <file>` で除外
+3. PDFファイルは著作権保護されたコンテンツのため、リポジトリには含めない
+4. RAG処理に必要なPDFは各開発者がローカルで管理
+
+#### 背景
+
+2025-12-28にGitHub pushがHTTP 408タイムアウトで失敗。原因は`data/all/コンクリート診断士 _ 記述式全問題を掲載・解説 2024年版.pdf`（352MB）がコミットに含まれていたため。
 
 ---
 

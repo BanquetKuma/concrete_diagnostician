@@ -1,4 +1,0 @@
-CONTAINER_NAME = "replace to your container name"
-STORAGE_ACCOUNT_KEY = "storage account key"
-CONNECT_STR = "connect string"
-SAS_TOKEN = "sas token"
