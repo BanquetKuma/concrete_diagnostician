@@ -1,0 +1,125 @@
+name: task-decomposer
+description: タスクを分解して.docs以下に構造化されたマークダウンファイルを作成します
+version: 1.0.0
+
+# コマンド実行時のプロンプト
+system_prompt: |
+  あなたは経験豊富なプロジェクトマネージャーおよびテクニカルライターです。
+  与えられたタスクや要件を分析し、実装可能な小さなサブタスクに分解して、
+  明確で構造化されたドキュメントを作成します。
+
+# 実行するコマンド
+commands:
+  - name: decompose
+    description: タスクを分解してドキュメント化
+    prompt: |
+      以下のタスクまたは要件を分析して、実装可能な小さなサブタスクに分解してください：
+      
+      {input}
+      
+      以下の形式で.docs/ディレクトリに保存するマークダウンファイルを作成してください：
+      
+      1. `.docs/01_task-overview.md` - タスクの概要とゴール
+      2. `.docs/02_task-breakdown.md` - 詳細なタスク分解
+      3. `.docs/03_implementation-plan.md` - 実装計画とタイムライン
+      4. `.docs/04_technical-requirements.md` - 技術要件と依存関係
+      
+      各ファイルには以下を含めてください：
+      - ファイル冒頭に実行順序番号（01, 02, 03, 04）
+      - 明確な見出し構造（H1, H2, H3）
+      - タスクの優先順位（High/Medium/Low）
+      - 推定工数
+      - 依存関係
+      - 成功基準
+      - リスクと対策
+      
+      各タスクを実装順序に従って番号付けし、依存関係を明確に示してください。
+      マークダウンファイルは日本語で記述し、技術的な用語は適切に説明を加えてください。
+
+  - name: analyze
+    description: 既存コードを分析してタスク化
+    prompt: |
+      現在のプロジェクトのコードベースを分析して、以下の観点でタスクを抽出してください：
+      
+      1. リファクタリングが必要な箇所
+      2. テストが不足している機能
+      3. パフォーマンス改善の余地がある部分
+      4. セキュリティ上の懸念事項
+      5. ドキュメント化が必要な機能
+      
+      分析結果を`.docs/code-analysis-tasks.md`として保存し、
+      各タスクに対して：
+      - 問題の説明
+      - 改善提案
+      - 実装の複雑度（1-5）
+      - 影響範囲
+      - 推奨される対応順序
+      
+      を記載してください。
+
+  - name: epic
+    description: エピックレベルのタスクを作成
+    prompt: |
+      以下の大規模な機能要件をエピックとして構造化してください：
+      
+      {input}
+      
+      `.docs/epic/`ディレクトリに以下のファイルを作成：
+      
+      1. `epic-overview.md` - エピックの全体像
+      2. `user-stories.md` - ユーザーストーリーの一覧
+      3. `technical-design.md` - 技術設計書
+      4. `milestone-plan.md` - マイルストーン計画
+      5. `acceptance-criteria.md` - 受け入れ基準
+      
+      各ユーザーストーリーには：
+      - As a [role], I want [feature], so that [benefit]形式
+      - ストーリーポイント
+      - 受け入れ基準
+      - 技術的なタスクリスト
+      
+      を含めてください。
+
+# ファイル操作の設定
+file_operations:
+  create_directory: true
+  base_path: ".docs"
+  file_encoding: "utf-8"
+  
+# テンプレート設定
+templates:
+  task_markdown: |
+    # {title}
+    
+    ## 概要
+    {description}
+    
+    ## 優先度
+    - **レベル**: {priority}
+    - **期限**: {deadline}
+    
+    ## タスク詳細
+    {task_details}
+    
+    ## 成功基準
+    {success_criteria}
+    
+    ## リスクと対策
+    {risks}
+    
+    ## 関連リソース
+    {resources}
+
+# 出力オプション
+output:
+  format: markdown
+  include_timestamps: true
+  generate_index: true
+  create_readme: true
+
+# 追加の設定
+settings:
+  auto_create_dirs: true
+  backup_existing: true
+  verbose_output: true
+  language: ja

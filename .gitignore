@@ -32,8 +32,28 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env.rag
+.env.gemini
+.env.turso
+.dev.vars
 
 # typescript
 *.tsbuildinfo
 
+# Python
+scripts/rag/venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PDF files (copyright protected textbooks)
+data/**/*.pdf
+
 app-example
+
+# Wrangler
+.wrangler/
+
+# Embedded git repos
+2Q-PoC/my_fastapi_project/deploy

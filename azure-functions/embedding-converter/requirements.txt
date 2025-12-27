@@ -1,0 +1,4 @@
+azure-functions
+openai
+numpy
+python-dotenv

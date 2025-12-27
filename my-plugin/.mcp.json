@@ -1,0 +1,115 @@
+{
+    "mcpServers": {
+        "claude_code": {
+            "command": "claude",
+            "args": [
+                "mcp",
+                "serve"
+            ],
+            "env": {}
+        },
+        "awslabs.aws-documentation-mcp-server": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "awslabs-aws-documentation-mcp-server",
+                "awslabs.aws-documentation-mcp-server"
+            ],
+            "env": {
+                "FASTMCP_LOG_LEVEL": "ERROR"
+            }
+        },
+        "github": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+            }
+        },
+        "playwright": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@playwright/mcp@latest",
+                "--vision"
+            ]
+        },
+        "awslabs.cdk-mcp-server": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "awslabs-cdk-mcp-server",
+                "awslabs.cdk-mcp-server"
+            ],
+            "env": {
+                "FASTMCP_LOG_LEVEL": "ERROR"
+            }
+        },
+        "Context7": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp@latest"
+            ]
+        },
+        "aws-cli.mcp-server": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "aws-cli-mcp-server",
+                "aws-cli-mcp-server"
+            ]
+        },
+        "Azure MCP Server": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@azure/mcp@latest",
+                "server",
+                "start"
+            ]
+        },
+        "serena": {
+          "type": "stdio",
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/home/sho/serena",
+            "serena-mcp-server"
+          ],
+          "env": {}
+        },
+        "slack": {
+          "type": "stdio",
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-slack"
+          ],
+          "env": {
+            "SLACK_BOT_TOKEN": "xoxb-4523426263667-8731049957895-Xhkx4FW2aqUd5fxVsPOsAMJi",
+            "SLACK_TEAM_ID": "T04FDCJ7RKM"
+          }
+        },
+        "_amazon-q_disabled": {
+            "_comment": "Amazon Q CLI does not support MCP protocol natively. Disabled until MCP support is added.",
+            "type": "stdio",
+            "command": "q",
+            "args": [
+                "chat"
+            ],
+            "env": {}
+        }
+    }
+}
