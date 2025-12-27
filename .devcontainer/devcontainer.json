@@ -25,7 +25,7 @@
     }
   },
 
-  "postCreateCommand": "npm install -g @anthropic-ai/claude-code && npm install && pip install -r scripts/gemini_rag/requirements.txt 2>/dev/null || true",
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code && pip install claude-monitor && npm install && pip install -r scripts/gemini_rag/requirements.txt 2>/dev/null || true",
 
   "forwardPorts": [8081, 8082, 19000, 19001, 19002],
 
