@@ -127,16 +127,48 @@ ccm
 
 ### Expo開発でCodespacesを使う場合
 
-ローカルネットワークが隔離されているため、`--tunnel`モードを使用します：
+#### 制限事項：モバイル実機テストは困難
 
-```json
-// package.json
-{
-  "scripts": {
-    "start:tunnel": "expo start --tunnel --clear"
-  }
-}
+Codespacesはクラウド上で動作するため、**モバイル実機からMetro Bundlerに直接接続できません**。
+
+ngrokの`--tunnel`モードを使えば理論上は可能ですが、Codespaces環境ではngrokが不安定で接続タイムアウトが頻発します。
+
+```bash
+# これはCodespacesでは動作しないことが多い
+npx expo start --tunnel --clear
+# → CommandError: ngrok tunnel took too long to connect.
 ```
+
+#### 推奨する使い分け
+
+| 環境 | 用途 |
+|------|------|
+| **Codespaces** | コード編集、Claude Code使用、Expo Web確認 |
+| **ローカル環境** | モバイル実機テスト |
+
+#### CodespacesでのExpo Web確認
+
+ブラウザでUIを確認する場合は問題なく動作します：
+
+```bash
+npx expo start --web --clear
+```
+
+#### モバイル実機テストはローカルで
+
+モバイル端末でテストする場合は、ローカル環境（Windows PowerShell等）から実行してください：
+
+```powershell
+# Windows PowerShellで実行
+cd C:\path\to\your\project
+npx expo start
+```
+
+同じWiFiネットワーク上でQRコードをスキャンすれば接続できます。
+
+#### devcontainer.jsonのポート設定（参考）
+
+Expo Webを使う場合のポート設定：
 
 ```json
 // devcontainer.json
