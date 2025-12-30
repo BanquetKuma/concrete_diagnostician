@@ -1,7 +1,8 @@
-import { StyleSheet, ScrollView, TouchableOpacity, Alert, Image, View } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, Alert, Image, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -18,9 +19,34 @@ const heroImage = require('@/assets/images/app_hero.png');
 export default function HomeScreen() {
   const { user, isLoading, error, refreshUser } = useUserContext();
   const { categories, isLoading: isLoadingCategories, error: categoriesError, refetch: refetchCategories } = useCategories();
+  const { signOut } = useAuth();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+
+  const handleSignOut = async () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('ログアウトしますか？');
+      if (confirmed) {
+        await signOut();
+      }
+    } else {
+      Alert.alert(
+        'ログアウト',
+        'ログアウトしますか？',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'ログアウト',
+            style: 'destructive',
+            onPress: async () => {
+              await signOut();
+            },
+          },
+        ]
+      );
+    }
+  };
 
   // Refetch data when screen comes into focus
   useFocusEffect(
@@ -84,6 +110,14 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.container}>
         <ThemedView style={styles.content}>
+        {/* Header with logout button */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerSpacer} />
+          <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
+            <ThemedText style={styles.logoutButtonText}>ログアウト</ThemedText>
+          </TouchableOpacity>
+        </View>
+
         {/* Hero Image */}
         <View style={[styles.heroContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Image
@@ -168,6 +202,27 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
     gap: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: -10,
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  logoutButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#dc2626',
+  },
+  logoutButtonText: {
+    fontSize: 13,
+    color: '#dc2626',
+    fontWeight: '500',
   },
   heroContainer: {
     borderRadius: 16,

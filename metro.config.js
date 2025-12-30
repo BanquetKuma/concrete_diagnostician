@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
@@ -6,5 +7,23 @@ const config = getDefaultConfig(__dirname);
 config.resolver.blockList = [
   /\.venv\/.*/,
 ];
+
+// Web用: expo-secure-storeをポリフィルに置き換え
+const originalResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Webプラットフォームの場合、expo-secure-storeをポリフィルに置き換え
+  if (platform === 'web' && moduleName === 'expo-secure-store') {
+    return {
+      filePath: path.resolve(__dirname, 'lib/securestore-polyfill.ts'),
+      type: 'sourceFile',
+    };
+  }
+
+  // それ以外は通常の解決を使用
+  if (originalResolveRequest) {
+    return originalResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
 
 module.exports = config;

@@ -18,6 +18,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500' as const,
+        },
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect

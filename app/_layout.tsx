@@ -1,33 +1,79 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import 'react-native-reanimated';
+
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { UserProvider } from '@/contexts/UserContext';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+if (!publishableKey) {
+  throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables');
+}
+
+// 認証状態に基づくルート保護
+function AuthGuard() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
+
+  useEffect(() => {
+    // 初回マウント時にナビゲーション準備完了とする
+    setIsNavigationReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded || !isNavigationReady) return;
+
+    const inPublicGroup = segments[0] === '(public)';
+
+    if (isSignedIn && inPublicGroup) {
+      router.replace('/(tabs)');
+    } else if (!isSignedIn && !inPublicGroup) {
+      router.replace('/(public)/sign-in');
+    }
+  }, [isSignedIn, isLoaded, isNavigationReady]);
+
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#4285F4" />
+      </View>
+    );
   }
 
   return (
     <UserProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="questions" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <Slot />
         <StatusBar style="auto" />
       </ThemeProvider>
     </UserProvider>
+  );
+}
+
+export default function RootLayout() {
+  const [loaded] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <ClerkProvider publishableKey={publishableKey}>
+      <ClerkLoaded>
+        <AuthGuard />
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

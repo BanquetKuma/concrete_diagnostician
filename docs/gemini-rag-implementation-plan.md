@@ -747,3 +747,81 @@ cd workers && npx wrangler deploy
 2. `@clerk/clerk-expo` パッケージ導入
 3. サインイン/サインアップ画面実装
 4. 既存デバイスIDユーザーのデータ移行機能
+
+---
+
+### 2024-12-30: Google OAuth設定 進行中
+
+#### 実施内容
+
+1. **task016詳細手順の追記**
+   - `docs/task/task016-clerk-authentication.md` に「Google OAuth設定 詳細手順」セクションを追加
+   - Step 1〜4の詳細な画面操作手順を文書化
+   - トラブルシューティング、本番公開時の追加作業も記載
+
+2. **Clerkアカウント作成**
+   - https://clerk.com でアカウント作成完了
+   - アプリケーション「Concrete Diagnostician」作成済み
+
+3. **Google Cloud Console 設定開始**
+   - Google Cloud Console でプロジェクト作成
+   - OAuth同意画面の設定を開始
+
+#### 残件（Google OAuth設定）
+
+| 項目 | 状態 | 備考 |
+|------|------|------|
+| Google Cloudプロジェクト作成 | ✅ 完了 | |
+| OAuth同意画面 - ユーザータイプ選択 | ⏳ 作業中 | 「外部」を選択 |
+| OAuth同意画面 - アプリ情報入力 | 未着手 | アプリ名、メール必須。URL類は後でOK |
+| OAuth同意画面 - スコープ設定 | 未着手 | email, profile, openid のみ |
+| OAuth同意画面 - テストユーザー追加 | 未着手 | 自分のGmailを追加 |
+| OAuthクライアントID作成 | 未着手 | 「ウェブアプリケーション」選択 |
+| Authorized redirect URI設定 | 未着手 | Clerkダッシュボードからコピー |
+| Client ID/Secret取得 | 未着手 | ⚠️ Secretは作成時1回のみ表示 |
+| Clerkダッシュボードに登録 | 未着手 | Social Connections → Google |
+| Account Portalで動作確認 | 未着手 | |
+
+#### 補足情報
+
+- **OAuth同意画面の最小入力項目**（テスト段階）:
+  - アプリ名: `コンクリート診断士`
+  - ユーザーサポートメール: 自分のメールアドレス
+  - デベロッパー連絡先: 自分のメールアドレス
+  - ※ URL類（ホームページ、プライバシーポリシー等）は空欄でOK
+
+- **本番公開時に追加設定が必要な項目**:
+  - プライバシーポリシーURL
+  - 承認済みドメイン
+  - Google審査の申請
+
+#### 次のアクション
+
+1. OAuth同意画面のアプリ情報入力を完了
+2. スコープ設定（email, profile, openid）
+3. テストユーザー追加
+4. OAuthクライアントID作成
+5. Clerkダッシュボードに認証情報登録
+6. Account Portalで動作確認
+
+---
+
+## 2025-12-31 予定
+
+### 次回作業内容
+
+1. **App Store登録の残件対応**
+   - App Store Connectでのアプリ登録準備
+   - プライバシーポリシー、利用規約の作成
+   - スクリーンショット、アプリアイコンの準備
+
+2. **課金・決済システム実装**
+   - In-App Purchase (IAP) の設定
+   - サブスクリプションまたは買い切りの検討
+   - RevenueCat等のサードパーティサービスの検討
+
+### 備考
+
+- 2025-12-30: Clerk認証実装完了（Google/GitHub OAuth）
+- 認証後のログアウト機能を各画面の右上に配置済み
+
