@@ -806,19 +806,44 @@ cd workers && npx wrangler deploy
 
 ---
 
-## 2025-12-31 予定
+## 2025-12-31 作業ログ
 
-### 次回作業内容
+### 完了した作業
 
-1. **App Store登録の残件対応**
-   - App Store Connectでのアプリ登録準備
-   - プライバシーポリシー、利用規約の作成
-   - スクリーンショット、アプリアイコンの準備
+#### App Store登録準備
 
-2. **課金・決済システム実装**
-   - In-App Purchase (IAP) の設定
-   - サブスクリプションまたは買い切りの検討
-   - RevenueCat等のサードパーティサービスの検討
+1. **法的ドキュメント作成**
+   - [x] プライバシーポリシー (`docs/legal/privacy-policy.md`)
+   - [x] 利用規約 (`docs/legal/terms-of-service.md`)
+   - [x] サポートページ (`docs/legal/support.md`)
+   - [x] GitHub Pages用設定 (`docs/legal/_config.yml`)
+
+2. **app.json設定更新**
+   - [x] アプリ名を日本語に変更（コンクリート診断士試験対策）
+   - [x] iOS bundleIdentifier設定（com.banquetkuma.concretediagnostician）
+   - [x] Android package設定
+   - [x] buildNumber/versionCode設定
+
+3. **EAS Build設定**
+   - [x] eas.json作成（development/preview/production）
+
+### 残件（ユーザー作業）
+
+| 作業 | 説明 |
+|------|------|
+| Apple Developer Program登録 | https://developer.apple.com/programs/ で登録（¥12,980/年） |
+| GitHub Pages有効化 | Settings → Pages → main branch, /docs folder |
+| アプリアイコン作成 | 1024x1024のオリジナルアイコンが必要 |
+| eas.json更新 | Apple ID、App Store Connect App ID、Team IDを設定 |
+| スクリーンショット撮影 | 各デバイスサイズ×5枚 |
+
+### 公開予定URL（GitHub Pages有効化後）
+
+| ドキュメント | URL |
+|-------------|-----|
+| プライバシーポリシー | https://banquetkuma.github.io/concrete_diagnostician/legal/privacy-policy |
+| 利用規約 | https://banquetkuma.github.io/concrete_diagnostician/legal/terms-of-service |
+| サポート | https://banquetkuma.github.io/concrete_diagnostician/legal/support |
 
 ### 備考
 

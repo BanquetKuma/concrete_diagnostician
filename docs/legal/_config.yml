@@ -1,0 +1,21 @@
+# GitHub Pages Configuration for Legal Documents
+title: コンクリート診断士試験対策アプリ
+description: コンクリート診断士試験対策アプリの法的ドキュメント
+
+# Theme
+theme: jekyll-theme-minimal
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Encoding
+encoding: utf-8
+
+# Exclude files
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock

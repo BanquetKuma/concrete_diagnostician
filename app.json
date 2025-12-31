@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "concrete_diagnostician",
-    "slug": "concrete_diagnostician",
+    "name": "コンクリート診断士試験対策",
+    "slug": "concrete-diagnostician",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,9 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.banquetkuma.concretediagnostician",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "診断士試験対策",
+        "NSCameraUsageDescription": "This app does not use the camera.",
+        "NSPhotoLibraryUsageDescription": "This app does not access photos."
+      }
     },
     "android": {
+      "package": "com.banquetkuma.concretediagnostician",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

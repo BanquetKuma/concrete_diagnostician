@@ -344,19 +344,19 @@ App Store Connect で設定が必要な項目:
 
 ### プライバシーポリシー
 
-- [ ] 文書作成完了
-- [ ] 連絡先情報を記載
+- [x] 文書作成完了 (2024-12-31)
+- [x] 連絡先情報を記載
 - [ ] URL で公開
 
 ### 利用規約
 
-- [ ] 文書作成完了
+- [x] 文書作成完了 (2024-12-31)
 - [ ] URL で公開
 
 ### サポートページ
 
-- [ ] FAQ 作成
-- [ ] 問い合わせ先記載
+- [x] FAQ 作成 (2024-12-31)
+- [x] 問い合わせ先記載
 - [ ] URL で公開
 
 ### App Store Connect 設定準備
@@ -368,11 +368,23 @@ App Store Connect で設定が必要な項目:
 
 ## 公開 URL 記録
 
+GitHub Pages を有効化後、以下のURLでアクセス可能になります：
+
 | ドキュメント | URL |
 |-------------|-----|
-| プライバシーポリシー | |
-| 利用規約 | |
-| サポートページ | |
+| インデックス | https://banquetkuma.github.io/concrete_diagnostician/legal/ |
+| プライバシーポリシー | https://banquetkuma.github.io/concrete_diagnostician/legal/privacy-policy |
+| 利用規約 | https://banquetkuma.github.io/concrete_diagnostician/legal/terms-of-service |
+| サポートページ | https://banquetkuma.github.io/concrete_diagnostician/legal/support |
+
+### GitHub Pages 有効化手順
+
+1. GitHub リポジトリページで「Settings」をクリック
+2. 左メニューから「Pages」を選択
+3. Source で「Deploy from a branch」を選択
+4. Branch で「main」、フォルダで「/docs」を選択
+5. 「Save」をクリック
+6. 数分後にURLが有効化される
 
 ---
 
