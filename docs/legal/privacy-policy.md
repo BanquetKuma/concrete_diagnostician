@@ -10,7 +10,7 @@
 
 ## 運営者情報
 
-- 運営者名: BanquetKuma
+- 運営者名: Sho Kumada
 - お問い合わせ: banquet.kuma@gmail.com
 
 ## 収集する情報
@@ -104,4 +104,4 @@
 
 ---
 
-© 2024 BanquetKuma. All Rights Reserved.
+© 2024 Sho Kumada. All Rights Reserved.

@@ -34,4 +34,4 @@
 
 ---
 
-© 2024 BanquetKuma. All Rights Reserved.
+© 2024 Sho Kumada. All Rights Reserved.

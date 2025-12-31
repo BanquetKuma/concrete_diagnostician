@@ -100,7 +100,7 @@ banquet.kuma@gmail.com
 ## アプリ情報
 
 - **アプリ名**: コンクリート診断士試験対策
-- **開発者**: BanquetKuma
+- **開発者**: Sho Kumada
 - **カテゴリ**: 教育
 - **対応問題形式**: 四肢択一式（記述式は今後対応予定）
 
@@ -111,4 +111,4 @@ banquet.kuma@gmail.com
 
 ---
 
-© 2024 BanquetKuma. All Rights Reserved.
+© 2024 Sho Kumada. All Rights Reserved.
