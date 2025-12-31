@@ -30,7 +30,7 @@
 
 ## お問い合わせ
 
-- メール: concrete.diagnostician.app@gmail.com
+- メール: banquet.kuma@gmail.com
 
 ---
 

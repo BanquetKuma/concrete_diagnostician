@@ -93,7 +93,7 @@
 
 本規約に関するお問い合わせは、以下までご連絡ください。
 
-- メール: concrete.diagnostician.app@gmail.com
+- メール: banquet.kuma@gmail.com
 
 ---
 

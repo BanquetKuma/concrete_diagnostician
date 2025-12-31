@@ -71,7 +71,7 @@ A:
 ## お問い合わせ
 
 ### メール
-concrete.diagnostician.app@gmail.com
+banquet.kuma@gmail.com
 
 ### ご連絡の際のお願い
 

@@ -11,7 +11,7 @@
 ## 運営者情報
 
 - 運営者名: BanquetKuma
-- お問い合わせ: concrete.diagnostician.app@gmail.com
+- お問い合わせ: banquet.kuma@gmail.com
 
 ## 収集する情報
 
@@ -100,7 +100,7 @@
 
 プライバシーに関するお問い合わせは、以下までご連絡ください：
 
-- メール: concrete.diagnostician.app@gmail.com
+- メール: banquet.kuma@gmail.com
 
 ---
 
