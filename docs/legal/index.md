@@ -4,9 +4,9 @@
 
 ## ドキュメント
 
-- [プライバシーポリシー](./privacy-policy.md)
-- [利用規約](./terms-of-service.md)
-- [サポート](./support.md)
+- [プライバシーポリシー](./privacy-policy.html)
+- [利用規約](./terms-of-service.html)
+- [サポート](./support.html)
 
 ## アプリについて
 

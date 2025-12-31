@@ -125,8 +125,8 @@ banquet.kuma@gmail.com
 
 ## リンク
 
-- [プライバシーポリシー](./privacy-policy.md)
-- [利用規約](./terms-of-service.md)
+- [プライバシーポリシー](./privacy-policy.html)
+- [利用規約](./terms-of-service.html)
 
 ---
 
