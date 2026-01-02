@@ -68,6 +68,32 @@ export default function SignInScreen() {
     }
   }, [isLoaded, startSSOFlow, router]);
 
+  const handleAppleSignIn = useCallback(async () => {
+    if (!isLoaded) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const redirectUrl = Linking.createURL('/');
+
+      const { createdSessionId, setActive: ssoSetActive } = await startSSOFlow({
+        strategy: 'oauth_apple',
+        redirectUrl,
+      });
+
+      if (createdSessionId) {
+        await ssoSetActive!({ session: createdSessionId });
+        router.replace('/(tabs)');
+      }
+    } catch (err: any) {
+      console.error('Apple sign-in error:', err);
+      setError(err.errors?.[0]?.message || 'サインインに失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoaded, startSSOFlow, router]);
+
   if (!isLoaded) {
     return (
       <View style={styles.container}>
@@ -89,6 +115,18 @@ export default function SignInScreen() {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.button, styles.appleButton]}
+          onPress={handleAppleSignIn}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}> Appleでサインイン</Text>
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.googleButton]}
@@ -157,6 +195,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
+  },
+  appleButton: {
+    backgroundColor: '#000000',
   },
   googleButton: {
     backgroundColor: '#4285F4',

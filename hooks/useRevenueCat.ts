@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import Purchases, {
   PurchasesPackage,
   CustomerInfo,
@@ -11,6 +12,9 @@ import Purchases, {
 
 // Entitlement ID configured in RevenueCat dashboard
 const ENTITLEMENT_ID = 'pro_access';
+
+// Check if running in Expo Go (not a standalone build)
+const isExpoGo = Constants.appOwnership === 'expo';
 
 interface UseRevenueCatReturn {
   isInitialized: boolean;
@@ -34,10 +38,14 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
 
   // Initialize RevenueCat
   const initializeRevenueCat = useCallback(async () => {
-    // RevenueCat is not supported on web
-    if (Platform.OS === 'web') {
+    // RevenueCat is not supported on web or Expo Go
+    if (Platform.OS === 'web' || isExpoGo) {
       setIsLoading(false);
-      setError('サブスクリプションはモバイルアプリでのみ利用可能です');
+      // Don't show error in Expo Go - it's expected behavior
+      if (Platform.OS === 'web') {
+        setError('サブスクリプションはモバイルアプリでのみ利用可能です');
+      }
+      // In Expo Go, silently skip - subscriptions will work in production build
       return;
     }
 
@@ -85,7 +93,7 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
 
   // Refresh customer info
   const refreshCustomerInfo = useCallback(async () => {
-    if (Platform.OS === 'web' || !isInitialized) return;
+    if (Platform.OS === 'web' || isExpoGo || !isInitialized) return;
 
     try {
       const info = await Purchases.getCustomerInfo();
@@ -99,8 +107,8 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
   // Purchase a package
   const purchasePackage = useCallback(
     async (pkg: PurchasesPackage): Promise<boolean> => {
-      if (Platform.OS === 'web' || !isInitialized) {
-        setError('この環境では購入できません');
+      if (Platform.OS === 'web' || isExpoGo || !isInitialized) {
+        setError('この環境では購入できません（本番ビルドでご利用ください）');
         return false;
       }
 
@@ -140,8 +148,8 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
 
   // Restore purchases
   const restorePurchases = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'web' || !isInitialized) {
-      setError('この環境では復元できません');
+    if (Platform.OS === 'web' || isExpoGo || !isInitialized) {
+      setError('この環境では復元できません（本番ビルドでご利用ください）');
       return false;
     }
 
@@ -177,7 +185,7 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
 
   // Listen for customer info updates
   useEffect(() => {
-    if (Platform.OS === 'web' || !isInitialized) return;
+    if (Platform.OS === 'web' || isExpoGo || !isInitialized) return;
 
     const customerInfoListener = (info: CustomerInfo) => {
       setCustomerInfo(info);

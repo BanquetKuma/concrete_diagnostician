@@ -36,14 +36,47 @@ export type {
 };
 export { ApiError };
 
+// Cache entry type
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
 class ApiClient {
   private baseUrl: string;
   private timeout: number;
+
+  // In-memory cache for static data
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private static CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
   constructor() {
     const config = getApiConfig();
     this.baseUrl = config.baseUrl;
     this.timeout = config.timeout;
+  }
+
+  // Cache helper methods
+  private getCached<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    const isExpired = Date.now() - entry.timestamp > ApiClient.CACHE_TTL;
+    if (isExpired) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data as T;
+  }
+
+  private setCache<T>(key: string, data: T): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  // Clear all cached data (useful for force refresh)
+  clearCache(): void {
+    this.cache.clear();
   }
 
   private async request<T>(
@@ -113,20 +146,36 @@ class ApiClient {
 
   // Question API methods
   async getExamYears(): Promise<{ years: ExamYear[] }> {
+    const cacheKey = 'exam_years';
+    const cached = this.getCached<{ years: ExamYear[] }>(cacheKey);
+    if (cached) return cached;
+
     const response = await this.request<{ years: { year: number; totalQuestions: number }[] }>(
       API_ENDPOINTS.questions.years
     );
-    return {
+    const result = {
       years: response.years.map((y) => ({
         year: y.year,
         totalQuestions: y.totalQuestions,
         completedQuestions: 0,
       })),
     };
+
+    this.setCache(cacheKey, result);
+    return result;
   }
 
   async getQuestions(year: number): Promise<{ questions: QuestionListItem[] }> {
-    return this.request(API_ENDPOINTS.questions.list(year));
+    const cacheKey = `questions_${year}`;
+    const cached = this.getCached<{ questions: QuestionListItem[] }>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.request<{ questions: QuestionListItem[] }>(
+      API_ENDPOINTS.questions.list(year)
+    );
+
+    this.setCache(cacheKey, result);
+    return result;
   }
 
   async getQuestion(year: number, questionId: string): Promise<{ question: Question }> {
@@ -135,7 +184,16 @@ class ApiClient {
 
   // Category-based question methods
   async getCategories(): Promise<{ categories: CategorySummary[] }> {
-    return this.request(API_ENDPOINTS.questions.categories);
+    const cacheKey = 'categories';
+    const cached = this.getCached<{ categories: CategorySummary[] }>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.request<{ categories: CategorySummary[] }>(
+      API_ENDPOINTS.questions.categories
+    );
+
+    this.setCache(cacheKey, result);
+    return result;
   }
 
   async getQuestionsByCategory(category: string): Promise<{

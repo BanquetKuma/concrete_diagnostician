@@ -181,18 +181,6 @@ export default function SubscriptionScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Info */}
-          <View style={styles.infoSection}>
-            <ThemedText style={styles.infoText}>
-              • サブスクリプションは自動更新されます
-            </ThemedText>
-            <ThemedText style={styles.infoText}>
-              • 購入後24時間以内に解約すると全額返金されます
-            </ThemedText>
-            <ThemedText style={styles.infoText}>
-              • 解約はApp Storeの設定から行えます
-            </ThemedText>
-          </View>
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
@@ -322,15 +310,6 @@ const styles = StyleSheet.create({
   restoreButtonText: {
     color: '#0a7ea4',
     fontSize: 16,
-  },
-  infoSection: {
-    marginTop: 10,
-    gap: 8,
-  },
-  infoText: {
-    fontSize: 12,
-    opacity: 0.6,
-    lineHeight: 18,
   },
   webNoticeCard: {
     padding: 24,

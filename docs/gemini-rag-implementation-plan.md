@@ -383,12 +383,15 @@ python scripts/gemini_rag/export_questions.py
 #### 実施内容
 
 1. **全カテゴリ一括生成を実行**
+
    ```bash
    python scripts/gemini_rag/generate_questions.py
    ```
+
    - 結果: 89/100問生成（11問がバリデーションエラーでスキップ）
 
 2. **不足カテゴリの分析**
+
    | カテゴリ | 生成数 | 目標 | 不足 |
    |---------|-------|------|------|
    | construction | 5 | 15 | -10 |
@@ -396,10 +399,12 @@ python scripts/gemini_rag/export_questions.py
    | その他5カテゴリ | 70 | 70 | 0 |
 
 3. **不足カテゴリの再生成**
+
    ```bash
    python scripts/gemini_rag/generate_questions.py --category construction --output data/generated/questions_construction_retry.json
    python scripts/gemini_rag/generate_questions.py --category quality --output data/generated/questions_quality_retry.json
    ```
+
    - construction: 15/15 成功
    - quality: 15/15 成功
 
@@ -443,16 +448,19 @@ python scripts/gemini_rag/export_questions.py
 #### 実施内容
 
 **task003: Turso DBへの問題インポート** ✅
+
 - `scripts/db/import_questions.py` 作成
 - 100問をTurso DBにインポート完了
 - カテゴリ別内訳確認済み
 
 **task004: Cloudflare Workers プロジェクト作成** ✅
+
 - `workers/` ディレクトリ構築
 - Hono フレームワーク導入
 - `wrangler dev` でローカル開発サーバー起動確認
 
 **task005: 問題取得API実装** ✅
+
 - `workers/src/lib/db.ts` - Turso接続モジュール
 - `workers/src/types/question.ts` - 型定義
 - `workers/src/routes/questions.ts` - APIルート実装
@@ -500,9 +508,11 @@ workers/
    - Cloudflare Dashboardから設定
 
 2. **本番デプロイ実行**
+
    ```bash
    npx wrangler deploy
    ```
+
    - Version ID: `9128292a-894e-4139-a4c5-40ee0ca5cc3b`
 
 3. **全APIエンドポイント動作確認**
@@ -557,6 +567,7 @@ workers/
    - 全問題がフォーマット要件を満たすことを確認
 
 3. **Turso DBへのインポート**
+
    ```bash
    python scripts/db/import_questions.py data/generated/questions_20251227_211857.json
    python scripts/db/import_questions.py data/generated/questions_20251227_212215.json
@@ -634,6 +645,7 @@ workers/
 ```bash
 cd workers && npx wrangler deploy
 ```
+
 - Version ID: `b9fa9662-82d0-46f5-8c94-87087bc73d97`
 
 #### 動作確認
@@ -760,7 +772,7 @@ cd workers && npx wrangler deploy
    - トラブルシューティング、本番公開時の追加作業も記載
 
 2. **Clerkアカウント作成**
-   - https://clerk.com でアカウント作成完了
+   - <https://clerk.com> でアカウント作成完了
    - アプリケーション「Concrete Diagnostician」作成済み
 
 3. **Google Cloud Console 設定開始**
@@ -831,7 +843,7 @@ cd workers && npx wrangler deploy
 
 | 作業 | 説明 |
 |------|------|
-| Apple Developer Program登録 | https://developer.apple.com/programs/ で登録（¥12,980/年） |
+| Apple Developer Program登録 | <https://developer.apple.com/programs/> で登録（¥12,980/年） |
 | GitHub Pages有効化 | Settings → Pages → main branch, /docs folder |
 | アプリアイコン作成 | 1024x1024のオリジナルアイコンが必要 |
 | eas.json更新 | Apple ID、App Store Connect App ID、Team IDを設定 |
@@ -841,9 +853,9 @@ cd workers && npx wrangler deploy
 
 | ドキュメント | URL |
 |-------------|-----|
-| プライバシーポリシー | https://banquetkuma.github.io/concrete_diagnostician/legal/privacy-policy |
-| 利用規約 | https://banquetkuma.github.io/concrete_diagnostician/legal/terms-of-service |
-| サポート | https://banquetkuma.github.io/concrete_diagnostician/legal/support |
+| プライバシーポリシー | <https://banquetkuma.github.io/concrete_diagnostician/legal/privacy-policy> |
+| 利用規約 | <https://banquetkuma.github.io/concrete_diagnostician/legal/terms-of-service> |
+| サポート | <https://banquetkuma.github.io/concrete_diagnostician/legal/support> |
 
 ### 備考
 
@@ -872,11 +884,11 @@ cd workers && npx wrangler deploy
 
 | 順序 | 作業 | 詳細 |
 |-----|------|------|
-| 1 | App Store Connect ログイン | https://appstoreconnect.apple.com |
+| 1 | App Store Connect ログイン | <https://appstoreconnect.apple.com> |
 | 2 | API Key 作成 | ユーザーとアクセス → キー → App Store Connect API → 新規作成 |
 | 3 | p8ファイルダウンロード | ⚠️ 作成時1回のみダウンロード可能 |
 | 4 | Key ID / Issuer ID コピー | キー一覧とページ上部から取得 |
-| 5 | RevenueCat アプリ登録 | https://app.revenuecat.com でプロジェクト作成 |
+| 5 | RevenueCat アプリ登録 | <https://app.revenuecat.com> でプロジェクト作成 |
 | 6 | RevenueCat に認証情報登録 | p8ファイル、Key ID、Issuer ID を入力 |
 | 7 | Bundle ID 設定 | `com.banquetkuma.concretediagnostician` |
 | 8 | サブスクリプション商品作成 | App Store Connect → アプリ → サブスクリプション |
@@ -927,14 +939,17 @@ Bundle ID: com.banquetkuma.concretediagnostician
 ### Web版互換性修正
 
 #### 問題
+
 - `Alert.alert`がWeb版で動作しない（学習履歴クリアボタンが無反応）
 
 #### 解決策
+
 - `Platform.OS`チェックを追加
 - Web: `window.confirm()` / `window.alert()` を使用
 - iOS/Android: 従来の`Alert.alert`を使用
 
 #### 修正ファイル
+
 | ファイル | 変更内容 |
 |---------|---------|
 | `app/(tabs)/index.tsx` | 全学習履歴クリアのPlatform対応 |
@@ -1022,4 +1037,3 @@ npm install react-native-svg --legacy-peer-deps
 3. **継続的改善**
    - ユーザーフィードバック収集
    - 問題コンテンツ追加
-

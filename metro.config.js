@@ -3,9 +3,11 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
-// Exclude .venv directory from Metro's file watcher to prevent permission errors on Windows
+// Exclude virtual environment directories from Metro's file watcher to prevent permission errors on Windows
+// Use [/\\] to match both forward slash (Unix) and backslash (Windows) path separators
 config.resolver.blockList = [
-  /\.venv\/.*/,
+  /\.venv[/\\].*/,
+  /venv_rag[/\\].*/,
 ];
 
 // Web用: expo-secure-storeをポリフィルに置き換え

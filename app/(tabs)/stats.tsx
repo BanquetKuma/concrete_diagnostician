@@ -20,7 +20,7 @@ export default function StatsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const { signOut } = useAuth();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('ログアウトしますか？');
       if (confirmed) {
@@ -42,7 +42,7 @@ export default function StatsScreen() {
         ]
       );
     }
-  };
+  }, [signOut]);
 
   // Refetch data when screen comes into focus
   useFocusEffect(

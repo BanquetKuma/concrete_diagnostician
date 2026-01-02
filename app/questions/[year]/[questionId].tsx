@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -128,7 +128,7 @@ export default function QuestionScreen() {
     }
   };
 
-  const getChoiceStyle = (choice: QuestionChoice) => {
+  const getChoiceStyle = useCallback((choice: QuestionChoice) => {
     const baseStyle = [
       styles.choiceButton,
       { backgroundColor: colors.card, borderColor: colors.border },
@@ -160,9 +160,9 @@ export default function QuestionScreen() {
     }
 
     return baseStyle;
-  };
+  }, [colors.card, colors.border, isAnswered, selectedChoiceId]);
 
-  const getChoiceTextColor = (choice: QuestionChoice) => {
+  const getChoiceTextColor = useCallback((choice: QuestionChoice) => {
     if (!isAnswered) {
       return colors.text;
     }
@@ -172,7 +172,48 @@ export default function QuestionScreen() {
     }
 
     return colors.text;
-  };
+  }, [colors.text, isAnswered, selectedChoiceId]);
+
+  // Memoized explanation processing to avoid re-parsing on every render
+  const processedExplanation = useMemo(() => {
+    if (!question?.explanation) return { parts: [], inlineReference: null };
+
+    const text = question.explanation;
+    // インライン参照を抽出（全角・半角括弧両対応）
+    const referencePattern = /[（(]参照[：:].*?[）)]\s*$/;
+    const referenceMatch = text.match(referencePattern);
+    const inlineReference = referenceMatch ? referenceMatch[0] : null;
+    const textWithoutRef = inlineReference ? text.replace(referencePattern, '').trim() : text;
+
+    // 改行で分割し、空行を除去
+    const lines = textWithoutRef.split('\n').filter(line => line.trim());
+
+    // 各行がすでに【正解】や【誤り】で始まっている場合はそのまま返す
+    if (lines.length > 1 && lines.some(line => line.trim().startsWith('【誤り】'))) {
+      return { parts: lines, inlineReference };
+    }
+
+    // 【正解】と【誤り】で分割（全角・半角両対応）
+    const sections = textWithoutRef.split(/(?=【正解】|【誤り】|\[正解\]|\[誤り\])/);
+    const result: string[] = [];
+
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed) continue;
+
+      // 【誤り】セクションで複数の回答が含まれているかチェック
+      if (trimmed.startsWith('【誤り】') || trimmed.startsWith('[誤り]')) {
+        // 「。」の後に「a:」「b:」等が続くパターンを検出して分割
+        const withSeparators = trimmed.replace(/。([a-dａ-ｄ][：:])/g, '。\n【誤り】$1');
+        const parts = withSeparators.split('\n');
+        result.push(...parts.filter(p => p.trim()));
+      } else {
+        result.push(trimmed);
+      }
+    }
+
+    return { parts: result, inlineReference };
+  }, [question?.explanation]);
 
   if (isLoading) {
     return <LoadingView message="問題を読み込み中..." />;
@@ -282,71 +323,26 @@ export default function QuestionScreen() {
             <ThemedText type="subtitle" style={styles.explanationTitle}>
               解説
             </ThemedText>
-            {(() => {
-              // 解説文を【正解】と【誤り】で分割し、インライン参照を抽出
-              const processExplanation = (text: string): { parts: string[]; inlineReference: string | null } => {
-                // インライン参照を抽出（全角・半角括弧両対応）
-                const referencePattern = /[（(]参照[：:].*?[）)]\s*$/;
-                const referenceMatch = text.match(referencePattern);
-                const inlineReference = referenceMatch ? referenceMatch[0] : null;
-                const textWithoutRef = inlineReference ? text.replace(referencePattern, '').trim() : text;
-
-                // 改行で分割し、空行を除去
-                const lines = textWithoutRef.split('\n').filter(line => line.trim());
-
-                // 各行がすでに【正解】や【誤り】で始まっている場合はそのまま返す
-                if (lines.length > 1 && lines.some(line => line.trim().startsWith('【誤り】'))) {
-                  return { parts: lines, inlineReference };
-                }
-
-                // 【正解】と【誤り】で分割（全角・半角両対応）
-                const sections = textWithoutRef.split(/(?=【正解】|【誤り】|\[正解\]|\[誤り\])/);
-                const result: string[] = [];
-
-                for (const section of sections) {
-                  const trimmed = section.trim();
-                  if (!trimmed) continue;
-
-                  // 【誤り】セクションで複数の回答が含まれているかチェック
-                  if (trimmed.startsWith('【誤り】') || trimmed.startsWith('[誤り]')) {
-                    // 「。」の後に「a:」「b:」等が続くパターンを検出して分割
-                    const withSeparators = trimmed.replace(/。([a-dａ-ｄ][：:])/g, '。\n【誤り】$1');
-                    const parts = withSeparators.split('\n');
-                    result.push(...parts.filter(p => p.trim()));
-                  } else {
-                    result.push(trimmed);
-                  }
-                }
-
-                return { parts: result, inlineReference };
-              };
-
-              const { parts, inlineReference } = processExplanation(question.explanation);
-              return (
-                <>
-                  {parts.map((part, index) => (
-                    <ThemedView key={index} style={index > 0 ? { marginTop: 20 } : undefined}>
-                      <ThemedText style={styles.explanationText}>
-                        {part}
-                      </ThemedText>
-                    </ThemedView>
-                  ))}
-                  {inlineReference && (
-                    <ThemedView style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border }}>
-                      <ThemedText style={[styles.explanationText, { opacity: 0.7, fontSize: 14 }]}>
-                        {inlineReference
-                          .replace(/^[（(]/, '')
-                          .replace(/[）)]$/, '')
-                          .replace(/教科書/g, 'この1冊で合格！コンクリート診断士2024年版 ')
-                          .replace(/セクション\s*/g, '')
-                          .replace(/\s+/g, ' ')
-                          .trim()}
-                      </ThemedText>
-                    </ThemedView>
-                  )}
-                </>
-              );
-            })()}
+            {processedExplanation.parts.map((part, index) => (
+              <ThemedView key={index} style={index > 0 ? { marginTop: 20 } : undefined}>
+                <ThemedText style={styles.explanationText}>
+                  {part}
+                </ThemedText>
+              </ThemedView>
+            ))}
+            {processedExplanation.inlineReference && (
+              <ThemedView style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <ThemedText style={[styles.explanationText, { opacity: 0.7, fontSize: 14 }]}>
+                  {processedExplanation.inlineReference
+                    .replace(/^[（(]/, '')
+                    .replace(/[）)]$/, '')
+                    .replace(/教科書/g, 'この1冊で合格！コンクリート診断士2024年版 ')
+                    .replace(/セクション\s*/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()}
+                </ThemedText>
+              </ThemedView>
+            )}
           </ThemedView>
         )}
 
