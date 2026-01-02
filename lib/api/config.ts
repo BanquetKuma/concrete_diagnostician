@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
   users: {
     register: '/api/users/register',
     get: (userId: string) => `/api/users/${userId}`,
+    delete: (userId: string) => `/api/users/${userId}`,
   },
   questions: {
     years: '/api/questions/years',

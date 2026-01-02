@@ -8,6 +8,7 @@ import { UserProgress } from '@/lib/api/client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { CATEGORY_LABELS, sortByCategory } from '@/constants/Categories';
+import { getStrongestCategory, getWeakestCategory, hasStudiedToday } from '@/lib/api/progress';
 
 interface StudyStatsProps {
   progress: UserProgress | null;
@@ -52,6 +53,73 @@ const StudyStatsComponent: React.FC<StudyStatsProps> = ({ progress, isLoading = 
     ];
   }, [progress, colors.tint]);
 
+  // Step 1: Strengths and weaknesses analysis
+  const strengthWeakness = useMemo(() => {
+    if (!progress || progress.byCategory.length === 0) return null;
+
+    const strongest = getStrongestCategory(progress.byCategory);
+    const weakest = getWeakestCategory(progress.byCategory);
+
+    return { strongest, weakest };
+  }, [progress]);
+
+  // Step 2: Achievement badges
+  const badges = useMemo(() => {
+    if (!progress) return [];
+
+    const achievedBadges: { emoji: string; label: string; achieved: boolean }[] = [];
+    const { overall } = progress;
+
+    // 100問解答達成
+    achievedBadges.push({
+      emoji: '🎯',
+      label: '100問達成',
+      achieved: overall.answeredQuestions >= 100,
+    });
+
+    // 正答率80%達成
+    achievedBadges.push({
+      emoji: '⭐',
+      label: '正答率80%',
+      achieved: overall.accuracy >= 80 && overall.answeredQuestions >= 10,
+    });
+
+    // 7日連続学習達成
+    achievedBadges.push({
+      emoji: '🔥',
+      label: '7日連続',
+      achieved: overall.studyStreak >= 7,
+    });
+
+    // 全分野50%以上達成
+    const allCategoriesOver50 = progress.byCategory.every(
+      (cat) => cat.answeredQuestions === 0 || cat.accuracy >= 50
+    );
+    const hasAnsweredAll = progress.byCategory.every((cat) => cat.answeredQuestions > 0);
+    achievedBadges.push({
+      emoji: '🏆',
+      label: '全分野制覇',
+      achieved: allCategoriesOver50 && hasAnsweredAll,
+    });
+
+    return achievedBadges;
+  }, [progress]);
+
+  // Step 3: Today's study summary
+  const todaySummary = useMemo(() => {
+    if (!progress) return null;
+
+    const { overall } = progress;
+    const studiedToday = hasStudiedToday(overall.lastStudyDate);
+
+    return {
+      studiedToday,
+      // Note: For real "today's" stats, we'd need backend support
+      // For now, show overall stats with study status
+      answeredToday: studiedToday ? '学習済み' : '未学習',
+    };
+  }, [progress]);
+
   if (isLoading) {
     return (
       <ThemedView style={styles.container}>
@@ -92,6 +160,96 @@ const StudyStatsComponent: React.FC<StudyStatsProps> = ({ progress, isLoading = 
           </ThemedView>
         ))}
       </ThemedView>
+
+      {/* Step 1: Strengths and Weaknesses */}
+      {strengthWeakness && (strengthWeakness.strongest || strengthWeakness.weakest) && (
+        <ThemedView
+          style={[
+            styles.strengthWeaknessCard,
+            { backgroundColor: colors.card, borderColor: colors.border }
+          ]}
+        >
+          {strengthWeakness.strongest && (
+            <ThemedView style={styles.strengthWeaknessRow}>
+              <ThemedText style={styles.strengthWeaknessEmoji}>💪</ThemedText>
+              <ThemedView style={styles.strengthWeaknessContent}>
+                <ThemedText style={styles.strengthWeaknessLabel}>得意分野</ThemedText>
+                <ThemedText style={[styles.strengthWeaknessValue, { color: '#34C759' }]}>
+                  {CATEGORY_LABELS[strengthWeakness.strongest.category] || strengthWeakness.strongest.category}
+                  （{strengthWeakness.strongest.accuracy}%）
+                </ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+          {strengthWeakness.weakest && strengthWeakness.strongest?.category !== strengthWeakness.weakest.category && (
+            <ThemedView style={styles.strengthWeaknessRow}>
+              <ThemedText style={styles.strengthWeaknessEmoji}>📚</ThemedText>
+              <ThemedView style={styles.strengthWeaknessContent}>
+                <ThemedText style={styles.strengthWeaknessLabel}>要改善</ThemedText>
+                <ThemedText style={[styles.strengthWeaknessValue, { color: '#FF9500' }]}>
+                  {CATEGORY_LABELS[strengthWeakness.weakest.category] || strengthWeakness.weakest.category}
+                  （{strengthWeakness.weakest.accuracy}%）
+                </ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+        </ThemedView>
+      )}
+
+      {/* Step 2: Achievement Badges */}
+      <ThemedView style={styles.badgesSection}>
+        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          達成バッジ
+        </ThemedText>
+        <ThemedView style={styles.badgesGrid}>
+          {badges.map((badge, index) => (
+            <ThemedView
+              key={index}
+              style={[
+                styles.badgeItem,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                !badge.achieved && styles.badgeItemInactive,
+              ]}
+            >
+              <ThemedText style={[styles.badgeEmoji, !badge.achieved && styles.badgeEmojiInactive]}>
+                {badge.emoji}
+              </ThemedText>
+              <ThemedText
+                style={[styles.badgeLabel, !badge.achieved && styles.badgeLabelInactive]}
+              >
+                {badge.label}
+              </ThemedText>
+            </ThemedView>
+          ))}
+        </ThemedView>
+      </ThemedView>
+
+      {/* Step 3: Today's Study Summary */}
+      {todaySummary && (
+        <ThemedView
+          style={[
+            styles.todaySummaryCard,
+            { backgroundColor: colors.card, borderColor: colors.border }
+          ]}
+        >
+          <ThemedView style={styles.todaySummaryHeader}>
+            <ThemedText style={styles.todaySummaryEmoji}>📈</ThemedText>
+            <ThemedText type="defaultSemiBold" style={styles.todaySummaryTitle}>
+              今日の学習
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.todaySummaryContent}>
+            <ThemedText
+              style={[
+                styles.todaySummaryStatus,
+                { color: todaySummary.studiedToday ? '#34C759' : '#8E8E93' }
+              ]}
+            >
+              {todaySummary.studiedToday ? '✓ 今日は学習済みです' : '今日はまだ学習していません'}
+            </ThemedText>
+          </ThemedView>
+        </ThemedView>
+      )}
 
       {/* Category-by-category breakdown */}
       <ThemedView style={styles.yearBreakdown}>
@@ -290,5 +448,91 @@ const styles = StyleSheet.create({
   activityText: {
     textAlign: 'center',
     opacity: 0.8,
+  },
+  // Step 1: Strengths and Weaknesses styles
+  strengthWeaknessCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  strengthWeaknessRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  strengthWeaknessEmoji: {
+    fontSize: 24,
+  },
+  strengthWeaknessContent: {
+    flex: 1,
+    gap: 2,
+  },
+  strengthWeaknessLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  strengthWeaknessValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Step 2: Badges styles
+  badgesSection: {
+    gap: 12,
+  },
+  badgesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  badgeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 6,
+  },
+  badgeItemInactive: {
+    opacity: 0.4,
+  },
+  badgeEmoji: {
+    fontSize: 16,
+  },
+  badgeEmojiInactive: {
+    opacity: 0.5,
+  },
+  badgeLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  badgeLabelInactive: {
+    opacity: 0.6,
+  },
+  // Step 3: Today's Summary styles
+  todaySummaryCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  todaySummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  todaySummaryEmoji: {
+    fontSize: 20,
+  },
+  todaySummaryTitle: {
+    fontSize: 16,
+  },
+  todaySummaryContent: {
+    alignItems: 'center',
+  },
+  todaySummaryStatus: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

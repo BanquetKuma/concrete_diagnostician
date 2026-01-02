@@ -17,14 +17,14 @@ import { apiClient } from '@/lib/api/client';
 const heroImage = require('@/assets/images/app_hero.png');
 
 export default function HomeScreen() {
-  const { user, isLoading, error, refreshUser } = useUserContext();
+  const { user, isLoading, error, refreshUser, clearSession } = useUserContext();
   const { categories, isLoading: isLoadingCategories, error: categoriesError, refetch: refetchCategories } = useCategories();
   const { signOut } = useAuth();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('ログアウトしますか？');
       if (confirmed) {
@@ -46,7 +46,7 @@ export default function HomeScreen() {
         ]
       );
     }
-  };
+  }, [signOut]);
 
   // Refetch data when screen comes into focus
   useFocusEffect(
@@ -55,48 +55,138 @@ export default function HomeScreen() {
     }, [refetchCategories])
   );
 
-  const handleRefreshUser = async () => {
+  const handleRefreshUser = useCallback(async () => {
     try {
       await refreshUser();
       Alert.alert('成功', 'ユーザー情報を更新しました');
     } catch {
       Alert.alert('エラー', 'ユーザー情報の更新に失敗しました');
     }
-  };
+  }, [refreshUser]);
 
-  const handleCategoryPress = (category: string) => {
+  const handleCategoryPress = useCallback((category: string) => {
     router.push({
       pathname: '/questions/category/[category]' as const,
       params: { category }
     } as never);
-  };
+  }, [router]);
 
-  const handleClearAllHistory = () => {
+  const executeClearAllHistory = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      await apiClient.clearAllAnswers(user.id);
+      refetchCategories();
+      if (Platform.OS === 'web') {
+        window.alert('全ての学習履歴をクリアしました');
+      } else {
+        Alert.alert('完了', '全ての学習履歴をクリアしました');
+      }
+    } catch (err) {
+      console.error('Failed to clear all history:', err);
+      if (Platform.OS === 'web') {
+        window.alert('学習履歴のクリアに失敗しました');
+      } else {
+        Alert.alert('エラー', '学習履歴のクリアに失敗しました');
+      }
+    }
+  }, [user?.id, refetchCategories]);
+
+  const handleClearAllHistory = useCallback(() => {
+    if (!user?.id) return;
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('全ての分野の学習履歴を削除しますか？\n\nこの操作は取り消せません。');
+      if (confirmed) {
+        executeClearAllHistory();
+      }
+    } else {
+      Alert.alert(
+        '全学習履歴のクリア',
+        '全ての分野の学習履歴を削除しますか？\n\nこの操作は取り消せません。',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'クリア',
+            style: 'destructive',
+            onPress: () => executeClearAllHistory(),
+          },
+        ]
+      );
+    }
+  }, [user?.id, executeClearAllHistory]);
+
+  const executeDeleteAccount = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      // 1. バックエンドでユーザーデータ削除
+      await apiClient.deleteAccount(user.id);
+
+      // 2. ローカルストレージクリア
+      await clearSession();
+
+      // 3. Clerkからサインアウト
+      await signOut();
+
+      // 4. サインイン画面へ遷移
+      router.replace('/(public)/sign-in');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      if (Platform.OS === 'web') {
+        window.alert('アカウント削除に失敗しました');
+      } else {
+        Alert.alert('エラー', 'アカウント削除に失敗しました');
+      }
+    }
+  }, [user?.id, clearSession, signOut, router]);
+
+  const confirmDeleteAccount = useCallback(() => {
     if (!user?.id) return;
 
     Alert.alert(
-      '全学習履歴のクリア',
-      '全ての分野の学習履歴を削除しますか？\n\nこの操作は取り消せません。',
+      '最終確認',
+      'アカウントを削除すると、すべてのデータが失われます。本当に削除しますか？',
       [
         { text: 'キャンセル', style: 'cancel' },
         {
-          text: 'クリア',
+          text: '完全に削除',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiClient.clearAllAnswers(user.id);
-              // カテゴリデータを再取得して進捗をリセット
-              refetchCategories();
-              Alert.alert('完了', '全ての学習履歴をクリアしました');
-            } catch (err) {
-              console.error('Failed to clear all history:', err);
-              Alert.alert('エラー', '学習履歴のクリアに失敗しました');
-            }
-          },
+          onPress: () => executeDeleteAccount(),
         },
       ]
     );
-  };
+  }, [user?.id, executeDeleteAccount]);
+
+  const handleDeleteAccount = useCallback(() => {
+    if (!user?.id) return;
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(
+        '本当にアカウントを削除しますか？\n\n以下のデータが完全に削除されます：\n・学習履歴\n・ユーザー情報\n\nこの操作は取り消せません。'
+      );
+      if (confirmed) {
+        const finalConfirm = window.confirm(
+          '【最終確認】\nアカウントを削除すると、すべてのデータが失われます。本当に削除しますか？'
+        );
+        if (finalConfirm) {
+          executeDeleteAccount();
+        }
+      }
+    } else {
+      Alert.alert(
+        'アカウント削除',
+        '本当にアカウントを削除しますか？\n\n以下のデータが完全に削除されます：\n・学習履歴\n・ユーザー情報\n\nこの操作は取り消せません。',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '削除する',
+            style: 'destructive',
+            onPress: () => confirmDeleteAccount(),
+          },
+        ]
+      );
+    }
+  }, [user?.id, executeDeleteAccount, confirmDeleteAccount]);
 
   if (isLoading) {
     return <LoadingView />;
@@ -181,6 +271,19 @@ export default function HomeScreen() {
           >
             <ThemedText style={styles.clearAllButtonText}>
               全学習履歴をクリア
+            </ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+
+        {/* Delete account button */}
+        <ThemedView style={styles.deleteAccountContainer}>
+          <View style={styles.separator} />
+          <TouchableOpacity
+            style={styles.deleteAccountButton}
+            onPress={handleDeleteAccount}
+          >
+            <ThemedText style={styles.deleteAccountButtonText}>
+              アカウントを削除
             </ThemedText>
           </TouchableOpacity>
         </ThemedView>
@@ -335,5 +438,26 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     fontSize: 14,
     fontWeight: '500',
+  },
+  deleteAccountContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  separator: {
+    width: '60%',
+    height: 1,
+    backgroundColor: '#E5E5E5',
+    marginBottom: 20,
+  },
+  deleteAccountButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#FF3B30',
+  },
+  deleteAccountButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

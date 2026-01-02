@@ -850,3 +850,176 @@ cd workers && npx wrangler deploy
 - 2025-12-30: Clerk認証実装完了（Google/GitHub OAuth）
 - 認証後のログアウト機能を各画面の右上に配置済み
 
+---
+
+## 残件: Apple Developer承認後の作業
+
+### RevenueCat決済機能の設定（承認待ち）
+
+**ステータス**: ⏳ Apple Developer Program承認待ち
+
+#### コード実装（完了済み）✅
+
+| ファイル | 内容 |
+|---------|------|
+| `hooks/useRevenueCat.ts` | 課金ロジックフック |
+| `app/(tabs)/subscription.tsx` | プラン画面UI |
+| `app/(tabs)/_layout.tsx` | 「⭐ プラン」タブ追加 |
+| `app.json` | `expo-build-properties` 設定（iOS deploymentTarget: 15.1） |
+| `.env` | RevenueCat APIキー（プレースホルダー） |
+
+#### 承認後に必要な作業
+
+| 順序 | 作業 | 詳細 |
+|-----|------|------|
+| 1 | App Store Connect ログイン | https://appstoreconnect.apple.com |
+| 2 | API Key 作成 | ユーザーとアクセス → キー → App Store Connect API → 新規作成 |
+| 3 | p8ファイルダウンロード | ⚠️ 作成時1回のみダウンロード可能 |
+| 4 | Key ID / Issuer ID コピー | キー一覧とページ上部から取得 |
+| 5 | RevenueCat アプリ登録 | https://app.revenuecat.com でプロジェクト作成 |
+| 6 | RevenueCat に認証情報登録 | p8ファイル、Key ID、Issuer ID を入力 |
+| 7 | Bundle ID 設定 | `com.banquetkuma.concretediagnostician` |
+| 8 | サブスクリプション商品作成 | App Store Connect → アプリ → サブスクリプション |
+| 9 | RevenueCat で商品連携 | Entitlement: `pro_access` に商品を紐付け |
+| 10 | `.env` 更新 | `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS` に実際のキーを設定 |
+| 11 | Development Build 作成 | `eas build --profile development --platform ios` |
+| 12 | Sandbox テスト | App Store Connect でテスターアカウント作成 |
+
+#### RevenueCat認証情報（設定後に記入）
+
+```
+Public API Key (iOS): appl_XXXXXXXXXX
+Entitlement ID: pro_access
+Bundle ID: com.banquetkuma.concretediagnostician
+```
+
+#### 注意事項
+
+- RevenueCatはネイティブモジュールのため **Expo Go では動作しない**
+- Development Build または Production Build が必要
+- Web版では「モバイルアプリをご利用ください」メッセージを表示済み
+
+---
+
+## 2025-01-02 作業ログ
+
+### パフォーマンス最適化
+
+#### 実施内容
+
+1. **useCallbackによるメモ化**
+   - `app/(tabs)/index.tsx` の全コールバック関数を`useCallback`でラップ
+   - 不要な再レンダリングを防止
+
+2. **API呼び出しの並列化**
+   - `hooks/useCategories.ts` で`Promise.all`を使用
+   - カテゴリ一覧と進捗データを同時取得
+
+3. **画像アセット圧縮**
+   - Python PILで圧縮処理
+   - icon.png: 1.6MB → 524KB (67%削減)
+   - adaptive-icon.png: 1.6MB → 524KB (67%削減)
+   - app_hero.png: 590KB → 468KB (21%削減)
+
+4. **未使用アセット削除**
+   - `react-logo.png`, `react-logo@2x.png`, `react-logo@3x.png`, `partial-react-logo.png` を削除
+
+### Web版互換性修正
+
+#### 問題
+- `Alert.alert`がWeb版で動作しない（学習履歴クリアボタンが無反応）
+
+#### 解決策
+- `Platform.OS`チェックを追加
+- Web: `window.confirm()` / `window.alert()` を使用
+- iOS/Android: 従来の`Alert.alert`を使用
+
+#### 修正ファイル
+| ファイル | 変更内容 |
+|---------|---------|
+| `app/(tabs)/index.tsx` | 全学習履歴クリアのPlatform対応 |
+| `app/questions/category/[category].tsx` | 分野別履歴クリアのPlatform対応 |
+
+### 統計画面の充実
+
+#### 追加機能
+
+1. **強み・弱み分析セクション** (`components/StudyStats.tsx`)
+   - 💪 得意分野（正答率最高の分野）
+   - 📚 要改善（正答率最低の分野）
+   - `getStrongestCategory` / `getWeakestCategory` 関数を活用
+
+2. **学習達成バッジ**
+   - 🎯 100問達成
+   - ⭐ 正答率80%達成（10問以上解答時）
+   - 🔥 7日連続学習
+   - 🏆 全分野制覇（全分野50%以上）
+   - 未達成バッジは半透明表示
+
+3. **今日の学習サマリー**
+   - 📈 今日の学習状況
+   - `hasStudiedToday`関数で判定
+
+4. **分野別レーダーチャート** (`components/CategoryRadarChart.tsx` 新規作成)
+   - `react-native-svg`パッケージを追加
+   - 各分野の正答率を視覚化
+   - 3分野以上回答でチャート表示
+   - 各軸に分野名と正答率（色分け）を表示
+   - 0%でも最小半径で形状表示
+   - ダークモード対応
+   - 凡例: 緑(60%以上)、オレンジ(30-59%)、赤(30%未満)
+
+#### 追加パッケージ
+
+```bash
+npm install react-native-svg --legacy-peer-deps
+```
+
+---
+
+## 残件一覧
+
+### 優先度: 高
+
+| タスク | 状態 | 詳細 |
+|--------|------|------|
+| Apple Developer Program承認 | ⏳ 承認待ち | 登録済み、承認待ち |
+| RevenueCat決済機能設定 | ⏳ 承認待ち | コード実装済み、App Store Connect設定待ち |
+| アカウント削除機能 | 🔲 未着手 | `docs/task/task017-account-deletion.md` 参照 |
+
+### 優先度: 中
+
+| タスク | 状態 | 詳細 |
+|--------|------|------|
+| 問題数修正 | ✅ 完了 | 302問 → 250問に修正済み |
+| GitHub Pages有効化 | 🔲 未着手 | Settings → Pages → main branch, /docs folder |
+| アプリアイコン作成 | ✅ 完了 | 圧縮済み |
+| スクリーンショット撮影 | 🔲 未着手 | 各デバイスサイズ×5枚 |
+
+### 優先度: 低
+
+| タスク | 状態 | 詳細 |
+|--------|------|------|
+| 問題品質チェック | ⏳ 継続中 | 専門家レビュー |
+| オフライン対応 | 🔲 未着手 | 将来バージョン |
+| 苦手問題推薦機能 | 🔲 未着手 | 将来バージョン |
+
+---
+
+## 次のアクション
+
+1. **Apple Developer承認後**
+   - App Store Connect APIキー作成
+   - RevenueCat設定
+   - Development Build作成
+   - サンドボックステスト
+
+2. **App Store申請前**
+   - アカウント削除機能実装（App Store審査要件）
+   - スクリーンショット撮影
+   - App Store Connectメタデータ入力
+
+3. **継続的改善**
+   - ユーザーフィードバック収集
+   - 問題コンテンツ追加
+

@@ -105,6 +105,12 @@ class ApiClient {
     return this.request(API_ENDPOINTS.users.get(userId));
   }
 
+  async deleteAccount(userId: string): Promise<{ success: boolean; message: string }> {
+    return this.request(API_ENDPOINTS.users.delete(userId), {
+      method: 'DELETE',
+    });
+  }
+
   // Question API methods
   async getExamYears(): Promise<{ years: ExamYear[] }> {
     const response = await this.request<{ years: { year: number; totalQuestions: number }[] }>(

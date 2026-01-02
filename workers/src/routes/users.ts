@@ -83,4 +83,36 @@ users.get('/:userId', async (c) => {
   }
 });
 
+// ユーザー削除（アカウント削除）
+users.delete('/:userId', async (c) => {
+  const userId = c.req.param('userId');
+  const db = createDbClient(c.env);
+
+  try {
+    // 1. 学習履歴を先に削除（外部キー制約対応）
+    await db.execute({
+      sql: 'DELETE FROM answers WHERE user_id = ?',
+      args: [userId],
+    });
+
+    // 2. ユーザーレコードを削除
+    const result = await db.execute({
+      sql: 'DELETE FROM users WHERE id = ?',
+      args: [userId],
+    });
+
+    if (result.rowsAffected === 0) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      message: 'アカウントが削除されました',
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return c.json({ success: false, error: 'Deletion failed' }, 500);
+  }
+});
+
 export default users;

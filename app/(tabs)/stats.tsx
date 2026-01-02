@@ -9,6 +9,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { StudyStats } from '@/components/StudyStats';
+import { CategoryRadarChart } from '@/components/CategoryRadarChart';
 import { progressService } from '@/lib/services/progressService';
 import { useUserContext } from '@/contexts/UserContext';
 import { UserProgress } from '@/lib/api/client';
@@ -77,6 +78,11 @@ export default function StatsScreen() {
           </View>
 
           <StudyStats progress={progress} isLoading={isLoading} />
+
+          {/* Radar Chart for category visualization */}
+          {progress && !isLoading && (
+            <CategoryRadarChart categories={progress.byCategory} />
+          )}
         </ThemedView>
       </ScrollView>
     </SafeAreaView>

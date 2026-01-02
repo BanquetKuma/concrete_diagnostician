@@ -27,14 +27,17 @@ export const useCategories = (): UseCategoriesReturn => {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.getCategories();
+      // Parallel API calls for better performance
+      const [categoriesResponse, progressResponse] = await Promise.all([
+        apiClient.getCategories(),
+        user ? apiClient.getProgress(user.id) : Promise.resolve(null),
+      ]);
 
-      // If user is available, merge with progress data
-      if (user) {
-        const progressResponse = await apiClient.getProgress(user.id);
+      // Merge with progress data if available
+      if (progressResponse) {
         const categoryProgress = progressResponse.progress.byCategory;
 
-        const categoriesWithProgress = response.categories.map((cat) => {
+        const categoriesWithProgress = categoriesResponse.categories.map((cat) => {
           const progress = categoryProgress.find((p) => p.category === cat.category);
           return {
             ...cat,
@@ -44,7 +47,7 @@ export const useCategories = (): UseCategoriesReturn => {
 
         setCategories(sortByCategory(categoriesWithProgress));
       } else {
-        const categoriesWithDefaults = response.categories.map((cat) => ({
+        const categoriesWithDefaults = categoriesResponse.categories.map((cat) => ({
           ...cat,
           completedQuestions: 0,
         }));

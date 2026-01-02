@@ -1,15 +1,15 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Tabs
@@ -17,18 +17,23 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500' as const,
+          fontSize: 13,
+          fontWeight: '600' as const,
         },
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
+        tabBarStyle: StyleSheet.flatten([
+          {
+            backgroundColor: isDark ? '#2C3E50' : '#E8F4F8',
+            borderTopWidth: 3,
+            borderTopColor: '#0a7ea4',
+            height: 70,
+            paddingBottom: 12,
+            paddingTop: 12,
           },
-          default: {},
-        }),
+          Platform.OS === 'ios' && {
+            position: 'absolute' as const,
+          },
+        ]),
       }}
     >
       <Tabs.Screen
@@ -43,6 +48,13 @@ export default function TabLayout() {
         options={{
           title: '統計',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="subscription"
+        options={{
+          title: '⭐ プラン',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
       />
     </Tabs>

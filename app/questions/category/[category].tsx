@@ -1,6 +1,6 @@
 // Questions list screen for specific category
 
-import { StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useState, useCallback } from 'react';
@@ -93,32 +93,49 @@ export default function CategoryQuestionsListScreen() {
     router.push('/(tabs)');
   };
 
-  const handleClearHistory = () => {
+  const executeClearHistory = useCallback(async () => {
+    if (!user?.id || !category) return;
+    try {
+      await apiClient.clearCategoryAnswers(user.id, category);
+      setQuestionStatuses(new Map());
+      if (Platform.OS === 'web') {
+        window.alert(`${categoryLabel}分野の学習履歴をクリアしました`);
+      } else {
+        Alert.alert('完了', `${categoryLabel}分野の学習履歴をクリアしました`);
+      }
+    } catch (err) {
+      console.error('Failed to clear history:', err);
+      if (Platform.OS === 'web') {
+        window.alert('学習履歴のクリアに失敗しました');
+      } else {
+        Alert.alert('エラー', '学習履歴のクリアに失敗しました');
+      }
+    }
+  }, [user?.id, category, categoryLabel]);
+
+  const handleClearHistory = useCallback(() => {
     if (!user?.id || !category) return;
 
-    Alert.alert(
-      '学習履歴のクリア',
-      `${categoryLabel}分野の学習履歴をすべて削除しますか？\n\nこの操作は取り消せません。`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: 'クリア',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiClient.clearCategoryAnswers(user.id, category);
-              // 画面を再読み込みして状態を更新
-              setQuestionStatuses(new Map());
-              Alert.alert('完了', `${categoryLabel}分野の学習履歴をクリアしました`);
-            } catch (err) {
-              console.error('Failed to clear history:', err);
-              Alert.alert('エラー', '学習履歴のクリアに失敗しました');
-            }
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`${categoryLabel}分野の学習履歴をすべて削除しますか？\n\nこの操作は取り消せません。`);
+      if (confirmed) {
+        executeClearHistory();
+      }
+    } else {
+      Alert.alert(
+        '学習履歴のクリア',
+        `${categoryLabel}分野の学習履歴をすべて削除しますか？\n\nこの操作は取り消せません。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'クリア',
+            style: 'destructive',
+            onPress: () => executeClearHistory(),
           },
-        },
-      ]
-    );
-  };
+        ]
+      );
+    }
+  }, [user?.id, category, categoryLabel, executeClearHistory]);
 
   if (isLoading) {
     return <LoadingView message={`${categoryLabel || category}分野の問題を読み込み中...`} />;
