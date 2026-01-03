@@ -321,6 +321,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: '#0a7ea4',
+    lineHeight: 44,
   },
   pricePeriod: {
     fontSize: 16,
