@@ -1,9 +1,9 @@
 // Questions list screen for specific year
 
-import { StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -12,6 +12,7 @@ import { apiClient, QuestionListItem } from '@/lib/api/client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useUser } from '@/hooks/useUser';
+import { useQuestionAccess } from '@/hooks/useQuestionAccess';
 
 // カテゴリ名の日本語マッピング
 const CATEGORY_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ export default function QuestionsListScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useUser();
+  const { isLocked, getFreeLimitForCategory } = useQuestionAccess();
 
   const [questions, setQuestions] = useState<QuestionListItem[]>([]);
   const [questionStatuses, setQuestionStatuses] = useState<Map<string, QuestionStatus>>(new Map());
@@ -89,7 +91,50 @@ export default function QuestionsListScreen() {
     }, [year, user?.id])
   );
 
-  const handleQuestionPress = (questionId: string) => {
+  // 各問題のカテゴリ内での番号を計算
+  const questionCategoryNumbers = useMemo(() => {
+    const categoryCounters: Record<string, number> = {};
+    const result = new Map<string, number>();
+
+    questions.forEach((q) => {
+      if (!categoryCounters[q.category]) {
+        categoryCounters[q.category] = 0;
+      }
+      categoryCounters[q.category]++;
+      result.set(q.id, categoryCounters[q.category]);
+    });
+
+    return result;
+  }, [questions]);
+
+  const handleQuestionPress = (questionId: string, category: string, categoryNumber: number) => {
+    // ロックされた問題の場合はアップグレードを促す
+    if (isLocked(category, categoryNumber)) {
+      const freeLimit = getFreeLimitForCategory(category);
+      const categoryLabel = CATEGORY_LABELS[category] || category;
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nすべての問題にアクセスするにはProプランにアップグレードしてください。\n\nアップグレード画面に移動しますか？`
+        );
+        if (confirmed) {
+          router.push('/subscription');
+        }
+      } else {
+        Alert.alert(
+          'Proプラン限定',
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nすべての問題にアクセスするにはProプランにアップグレードしてください。`,
+          [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'アップグレード',
+              onPress: () => router.push('/subscription'),
+            },
+          ]
+        );
+      }
+      return;
+    }
+
     router.push({
       pathname: '/questions/[year]/[questionId]',
       params: { year: year as string, questionId }
@@ -149,11 +194,16 @@ export default function QuestionsListScreen() {
             const status = questionStatuses.get(question.id);
             const displayNumber = index + 1;
             const categoryLabel = CATEGORY_LABELS[question.category] || question.category;
+            const categoryNumber = questionCategoryNumbers.get(question.id) || 1;
+            const questionIsLocked = isLocked(question.category, categoryNumber);
 
             // 回答状態に応じたスタイルとテキスト
             let statusText = '未回答';
             let statusStyle = styles.statusUnanswered;
-            if (status?.isAnswered) {
+            if (questionIsLocked) {
+              statusText = '🔒 Pro限定';
+              statusStyle = styles.statusLocked;
+            } else if (status?.isAnswered) {
               if (status.isCorrect) {
                 statusText = '正解';
                 statusStyle = styles.statusCorrect;
@@ -169,22 +219,24 @@ export default function QuestionsListScreen() {
                 style={[
                   styles.questionCard,
                   { backgroundColor: colors.card, borderColor: colors.border },
+                  questionIsLocked && styles.questionCardLocked,
                 ]}
-                onPress={() => handleQuestionPress(question.id)}
+                onPress={() => handleQuestionPress(question.id, question.category, categoryNumber)}
                 activeOpacity={0.7}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel={`問題${displayNumber}`}
-                accessibilityHint="この問題を開始するにはタップしてください"
+                accessibilityLabel={`問題${displayNumber}${questionIsLocked ? ' Pro限定' : ''}`}
+                accessibilityHint={questionIsLocked ? 'この問題はProプラン限定です' : 'この問題を開始するにはタップしてください'}
               >
                 <ThemedView style={styles.questionHeader}>
-                  <ThemedText type="subtitle">
+                  <ThemedText type="subtitle" style={questionIsLocked && styles.lockedText}>
                     問題 {displayNumber}
                   </ThemedText>
                   <ThemedText
                     style={[
                       styles.categoryText,
-                      { color: colors.tint }
+                      { color: colors.tint },
+                      questionIsLocked && styles.lockedText,
                     ]}
                     numberOfLines={2}
                   >
@@ -306,5 +358,14 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#FF3B30',
     marginBottom: 10,
+  },
+  statusLocked: {
+    color: '#8E8E93',
+  },
+  questionCardLocked: {
+    opacity: 0.7,
+  },
+  lockedText: {
+    opacity: 0.6,
   },
 });

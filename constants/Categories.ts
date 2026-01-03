@@ -3,6 +3,39 @@
  * This is the single source of truth for category order and labels
  */
 
+// ===== FREEMIUM SETTINGS =====
+// 各カテゴリの無料問題割合（40%）
+export const FREE_QUESTION_RATIO = 0.4;
+
+// カテゴリごとの総問題数
+export const CATEGORY_QUESTION_COUNTS: Record<string, number> = {
+  'materials': 36,
+  'mix-design': 36,
+  'construction': 36,
+  'quality': 35,
+  'deterioration': 36,
+  'diagnosis': 36,
+  'repair': 35,
+};
+
+/**
+ * カテゴリ内の無料問題上限を取得
+ */
+export function getFreeQuestionLimit(category: string): number {
+  const total = CATEGORY_QUESTION_COUNTS[category] || 0;
+  return Math.floor(total * FREE_QUESTION_RATIO);
+}
+
+/**
+ * 問題がロックされているかチェック（Pro会員でない場合）
+ */
+export function isQuestionLocked(category: string, questionNumber: number): boolean {
+  const freeLimit = getFreeQuestionLimit(category);
+  return questionNumber > freeLimit;
+}
+
+// ===== CATEGORY DEFINITIONS =====
+
 // Canonical category order - used for consistent display across the app
 export const CATEGORY_ORDER: string[] = [
   'materials',      // コンクリート材料

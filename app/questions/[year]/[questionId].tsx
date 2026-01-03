@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -19,6 +20,8 @@ import { useUserContext } from '@/contexts/UserContext';
 import { useQuestionNavigation } from '@/hooks/useQuestionNavigation';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useQuestionAccess } from '@/hooks/useQuestionAccess';
+import { getCategoryLabel } from '@/constants/Categories';
 
 export default function QuestionScreen() {
   const { year, questionId } = useLocalSearchParams<{
@@ -29,7 +32,8 @@ export default function QuestionScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useUserContext();
-  
+  const { isLocked, getFreeLimitForCategory } = useQuestionAccess();
+
   const navigation = useQuestionNavigation(
     year ? parseInt(year) : 0,
     questionId || ''
@@ -61,6 +65,46 @@ export default function QuestionScreen() {
 
     fetchQuestion();
   }, [year, questionId]);
+
+  // Access control: redirect locked questions to subscription
+  useEffect(() => {
+    if (question && isLocked(question.category, question.number)) {
+      const categoryLabel = getCategoryLabel(question.category);
+      const freeLimit = getFreeLimitForCategory(question.category);
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nアップグレード画面に移動しますか？`
+        );
+        if (confirmed) {
+          router.push('/subscription');
+        } else {
+          router.push({
+            pathname: '/questions/[year]',
+            params: { year: year as string }
+          });
+        }
+      } else {
+        Alert.alert(
+          'Proプラン限定',
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。`,
+          [
+            {
+              text: '問題一覧に戻る',
+              style: 'cancel',
+              onPress: () => router.push({
+                pathname: '/questions/[year]',
+                params: { year: year as string }
+              }),
+            },
+            {
+              text: 'アップグレード',
+              onPress: () => router.push('/subscription'),
+            },
+          ]
+        );
+      }
+    }
+  }, [question, year, isLocked, getFreeLimitForCategory, router]);
 
   const handleChoiceSelect = async (choiceId: string) => {
     if (isAnswered || !question || !user) return;

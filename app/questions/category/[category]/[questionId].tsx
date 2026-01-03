@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -19,6 +20,7 @@ import { useUserContext } from '@/contexts/UserContext';
 import { useCategoryQuestionNavigation } from '@/hooks/useCategoryQuestionNavigation';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useQuestionAccess } from '@/hooks/useQuestionAccess';
 
 export default function CategoryQuestionScreen() {
   const { category, questionId } = useLocalSearchParams<{
@@ -29,6 +31,7 @@ export default function CategoryQuestionScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useUserContext();
+  const { isLocked, getFreeLimitForCategory } = useQuestionAccess();
 
   const navigation = useCategoryQuestionNavigation(
     category || '',
@@ -63,6 +66,45 @@ export default function CategoryQuestionScreen() {
 
     fetchQuestion();
   }, [category, questionId]);
+
+  // アクセス権チェック：ロックされた問題の場合はサブスクリプション画面へ
+  useEffect(() => {
+    if (question && category && isLocked(category, question.number)) {
+      const freeLimit = getFreeLimitForCategory(category);
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nアップグレード画面に移動しますか？`
+        );
+        if (confirmed) {
+          router.push('/subscription');
+        } else {
+          router.push({
+            pathname: '/questions/category/[category]' as const,
+            params: { category: category as string }
+          } as never);
+        }
+      } else {
+        Alert.alert(
+          'Proプラン限定',
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。`,
+          [
+            {
+              text: '問題一覧に戻る',
+              style: 'cancel',
+              onPress: () => router.push({
+                pathname: '/questions/category/[category]' as const,
+                params: { category: category as string }
+              } as never),
+            },
+            {
+              text: 'アップグレード',
+              onPress: () => router.push('/subscription'),
+            },
+          ]
+        );
+      }
+    }
+  }, [question, category, categoryLabel, isLocked, getFreeLimitForCategory, router]);
 
   const handleChoiceSelect = async (choiceId: string) => {
     if (isAnswered || !question || !user) return;

@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, TouchableOpacity, Alert, View, Platform } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, Alert, View, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -6,6 +6,11 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { useRevenueCat } from '@/hooks/useRevenueCat';
+
+// Legal document URLs (Cloudflare Pages)
+const TERMS_OF_SERVICE_URL = 'https://concrete-diagnostician-docs.pages.dev/terms-of-service';
+const PRIVACY_POLICY_URL = 'https://concrete-diagnostician-docs.pages.dev/privacy-policy';
+const SUPPORT_URL = 'https://concrete-diagnostician-docs.pages.dev/support';
 
 export default function SubscriptionScreen() {
   const colorScheme = useColorScheme();
@@ -104,8 +109,8 @@ export default function SubscriptionScreen() {
             </ThemedText>
             <ThemedText style={[styles.statusDescription, isProMember && styles.whiteText]}>
               {isProMember
-                ? 'すべての機能をご利用いただけます'
-                : 'すべての問題を無料でご利用いただけます'}
+                ? 'すべての問題（250問）にアクセス可能'
+                : '各分野の基礎問題（約100問）が無料'}
             </ThemedText>
           </View>
 
@@ -124,15 +129,15 @@ export default function SubscriptionScreen() {
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
                 <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                <ThemedText style={styles.benefitText}>全250問にアクセス可能（無料版は約100問）</ThemedText>
+              </View>
+              <View style={styles.benefitItem}>
+                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                <ThemedText style={styles.benefitText}>各分野の応用・発展問題を学習</ThemedText>
+              </View>
+              <View style={styles.benefitItem}>
+                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
                 <ThemedText style={styles.benefitText}>広告なしで快適に学習</ThemedText>
-              </View>
-              <View style={styles.benefitItem}>
-                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                <ThemedText style={styles.benefitText}>オフライン学習機能（予定）</ThemedText>
-              </View>
-              <View style={styles.benefitItem}>
-                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                <ThemedText style={styles.benefitText}>詳細な学習統計（予定）</ThemedText>
               </View>
             </View>
           </View>
@@ -180,6 +185,35 @@ export default function SubscriptionScreen() {
               </ThemedText>
             </TouchableOpacity>
           )}
+
+          {/* Legal Links */}
+          <View style={styles.legalSection}>
+            <ThemedText style={styles.legalNote}>
+              サブスクリプションはいつでもキャンセル可能です。
+            </ThemedText>
+            <View style={styles.legalLinks}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
+                style={styles.legalLink}
+              >
+                <ThemedText style={styles.legalLinkText}>利用規約</ThemedText>
+              </TouchableOpacity>
+              <ThemedText style={styles.legalSeparator}>|</ThemedText>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+                style={styles.legalLink}
+              >
+                <ThemedText style={styles.legalLinkText}>プライバシーポリシー</ThemedText>
+              </TouchableOpacity>
+              <ThemedText style={styles.legalSeparator}>|</ThemedText>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(SUPPORT_URL)}
+                style={styles.legalLink}
+              >
+                <ThemedText style={styles.legalLinkText}>サポート</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
 
         </ThemedView>
       </ScrollView>
@@ -342,5 +376,32 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 14,
     opacity: 0.8,
+  },
+  legalSection: {
+    alignItems: 'center',
+    paddingTop: 20,
+    gap: 12,
+  },
+  legalNote: {
+    fontSize: 12,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legalLink: {
+    padding: 4,
+  },
+  legalLinkText: {
+    fontSize: 13,
+    color: '#0a7ea4',
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 13,
+    opacity: 0.4,
   },
 });

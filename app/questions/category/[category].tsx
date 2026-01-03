@@ -12,6 +12,7 @@ import { apiClient, QuestionListItem } from '@/lib/api/client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useUser } from '@/hooks/useUser';
+import { useQuestionAccess } from '@/hooks/useQuestionAccess';
 
 // 回答状態の型
 interface QuestionStatus {
@@ -26,6 +27,7 @@ export default function CategoryQuestionsListScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useUser();
+  const { isLocked, getFreeLimitForCategory } = useQuestionAccess();
 
   const [questions, setQuestions] = useState<QuestionListItem[]>([]);
   const [categoryLabel, setCategoryLabel] = useState<string>('');
@@ -78,7 +80,33 @@ export default function CategoryQuestionsListScreen() {
     }, [category, user?.id])
   );
 
-  const handleQuestionPress = (questionId: string) => {
+  const handleQuestionPress = (questionId: string, questionNumber: number) => {
+    // ロックされた問題の場合はアップグレードを促す
+    if (isLocked(category as string, questionNumber)) {
+      const freeLimit = getFreeLimitForCategory(category as string);
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nすべての問題にアクセスするにはProプランにアップグレードしてください。\n\nアップグレード画面に移動しますか？`
+        );
+        if (confirmed) {
+          router.push('/subscription');
+        }
+      } else {
+        Alert.alert(
+          'Proプラン限定',
+          `この問題はProプラン限定です。\n\n${categoryLabel}分野では問題1〜${freeLimit}が無料でご利用いただけます。\n\nすべての問題にアクセスするにはProプランにアップグレードしてください。`,
+          [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'アップグレード',
+              onPress: () => router.push('/subscription'),
+            },
+          ]
+        );
+      }
+      return;
+    }
+
     router.push({
       pathname: '/questions/category/[category]/[questionId]' as const,
       params: { category: category as string, questionId }
@@ -189,11 +217,15 @@ export default function CategoryQuestionsListScreen() {
           {questions.map((question, index) => {
             const status = questionStatuses.get(question.id);
             const displayNumber = index + 1;
+            const questionIsLocked = isLocked(category as string, displayNumber);
 
             // 回答状態に応じたスタイルとテキスト
             let statusText = '未回答';
             let statusStyle = styles.statusUnanswered;
-            if (status?.isAnswered) {
+            if (questionIsLocked) {
+              statusText = '🔒 Pro限定';
+              statusStyle = styles.statusLocked;
+            } else if (status?.isAnswered) {
               if (status.isCorrect) {
                 statusText = '正解';
                 statusStyle = styles.statusCorrect;
@@ -209,16 +241,17 @@ export default function CategoryQuestionsListScreen() {
                 style={[
                   styles.questionCard,
                   { backgroundColor: colors.card, borderColor: colors.border },
+                  questionIsLocked && styles.questionCardLocked,
                 ]}
-                onPress={() => handleQuestionPress(question.id)}
+                onPress={() => handleQuestionPress(question.id, displayNumber)}
                 activeOpacity={0.7}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel={`問題${displayNumber}`}
-                accessibilityHint="この問題を開始するにはタップしてください"
+                accessibilityLabel={`問題${displayNumber}${questionIsLocked ? ' Pro限定' : ''}`}
+                accessibilityHint={questionIsLocked ? 'この問題はProプラン限定です' : 'この問題を開始するにはタップしてください'}
               >
                 <ThemedView style={styles.questionHeader}>
-                  <ThemedText type="subtitle">
+                  <ThemedText type="subtitle" style={questionIsLocked && styles.lockedText}>
                     問題 {displayNumber}
                   </ThemedText>
                   <ThemedText style={[styles.statusText, statusStyle]}>
@@ -338,5 +371,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+  },
+  statusLocked: {
+    color: '#8E8E93',
+  },
+  questionCardLocked: {
+    opacity: 0.7,
+  },
+  lockedText: {
+    opacity: 0.6,
   },
 });
