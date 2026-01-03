@@ -149,13 +149,13 @@ export default function SubscriptionScreen() {
                 <>
                   <ThemedView style={styles.priceContainer}>
                     <ThemedText style={styles.price}>
-                      {offerings.monthly.product.priceString}
+                      {offerings.monthly.product.priceString || '読み込み中...'}
                     </ThemedText>
                     <ThemedText style={styles.pricePeriod}> / 月</ThemedText>
                   </ThemedView>
                   {/* DEBUG: 削除予定 - RevenueCatの返す値を確認 */}
                   <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
-                    Debug: {offerings.monthly.product.currencyCode} / {offerings.monthly.product.price}
+                    Debug: {offerings.monthly.product.currencyCode} / {offerings.monthly.product.price} / key: {process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS?.substring(0, 10)}...
                   </ThemedText>
                   <TouchableOpacity
                     style={[styles.purchaseButton, isLoading && styles.disabledButton]}
