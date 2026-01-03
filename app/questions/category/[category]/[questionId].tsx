@@ -374,44 +374,6 @@ export default function CategoryQuestionScreen() {
                 </ThemedText>
               </ThemedView>
             ))}
-            {processedExplanation.inlineReference && (
-              <ThemedView style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border }}>
-                <ThemedText style={[styles.explanationText, { opacity: 0.7, fontSize: 14 }]}>
-                  {processedExplanation.inlineReference
-                    .replace(/^[（(]/, '')
-                    .replace(/[）)]$/, '')
-                    .replace(/教科書/g, 'この1冊で合格！コンクリート診断士2024年版 ')
-                    .replace(/セクション\s*/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim()}
-                </ThemedText>
-              </ThemedView>
-            )}
-          </ThemedView>
-        )}
-
-        {/* Reference Source - 参照文献 */}
-        {showExplanation && question.source && (
-          <ThemedView
-            style={[
-              styles.referenceContainer,
-              { backgroundColor: colors.card, borderColor: colors.border }
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.referenceTitle}>
-              参照文献
-            </ThemedText>
-            <ThemedText style={styles.referenceText}>
-              書籍: {question.source.book}
-            </ThemedText>
-            <ThemedText style={styles.referenceText}>
-              ページ: {question.source.page}
-            </ThemedText>
-            {question.source.section && (
-              <ThemedText style={styles.referenceText}>
-                項目: {question.source.section}
-              </ThemedText>
-            )}
           </ThemedView>
         )}
 
