@@ -15,7 +15,8 @@
       "infoPlist": {
         "CFBundleDisplayName": "診断士試験対策",
         "NSCameraUsageDescription": "This app does not use the camera.",
-        "NSPhotoLibraryUsageDescription": "This app does not access photos."
+        "NSPhotoLibraryUsageDescription": "This app does not access photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -56,6 +57,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9fd7447f-995e-4638-b769-48c38dbb8e79"
+      }
     }
   }
 }
