@@ -1,6 +1,6 @@
 # プライバシーポリシー
 
-最終更新日: 2024年12月31日
+最終更新日: 2025年1月3日
 
 ## はじめに
 
@@ -21,6 +21,7 @@
 
 本アプリは、Clerk認証サービスを使用してユーザー認証を行います。
 
+- **Appleアカウント認証**: Appleアカウント（Sign in with Apple）でログインした場合、Apple IDに関連付けられたメールアドレス（またはプライベートリレーメール）と名前を取得します
 - **Googleアカウント認証**: Googleアカウントでログインした場合、メールアドレスとプロフィール情報（名前、プロフィール画像）を取得します
 - **GitHubアカウント認証**: GitHubアカウントでログインした場合、メールアドレスとユーザー名を取得します
 - **ユーザーID**: 認証プロバイダーから提供される一意の識別子
@@ -30,6 +31,11 @@
 - **学習履歴**: 解答した問題、正誤結果、解答日時
 - **学習進捗**: カテゴリ別・年度別の学習状況
 - **最終学習日**: 最後に学習を行った日時
+
+### 購入情報
+
+- **サブスクリプション状態**: Proプランの購入状況（RevenueCatを通じて管理）
+- **購入履歴**: App Store経由での購入記録（Appleが管理）
 
 ### 収集しない情報
 
@@ -58,7 +64,9 @@
 
 | サービス名 | 用途 | プライバシーポリシー |
 |-----------|------|---------------------|
+| Apple | ユーザー認証（Sign in with Apple） | [Apple Privacy Policy](https://www.apple.com/legal/privacy/) |
 | Clerk | ユーザー認証 | [Clerk Privacy Policy](https://clerk.com/legal/privacy) |
+| RevenueCat | サブスクリプション管理 | [RevenueCat Privacy Policy](https://www.revenuecat.com/privacy) |
 | Cloudflare Workers | APIサーバー | [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/) |
 | Turso | データベース | [Turso Privacy Policy](https://turso.tech/privacy-policy) |
 
