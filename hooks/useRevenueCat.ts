@@ -11,7 +11,7 @@ import Purchases, {
 } from 'react-native-purchases';
 
 // Entitlement ID configured in RevenueCat dashboard
-const ENTITLEMENT_ID = 'pro_access';
+const ENTITLEMENT_ID = 'pro';
 
 // Check if running in Expo Go (not a standalone build)
 const isExpoGo = Constants.appOwnership === 'expo';
