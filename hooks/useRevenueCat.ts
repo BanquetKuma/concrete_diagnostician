@@ -74,15 +74,6 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
       const allOfferings = await Purchases.getOfferings();
       if (allOfferings.current) {
         setOfferings(allOfferings.current);
-        // Debug: Log price data to verify what RevenueCat returns
-        if (allOfferings.current.monthly) {
-          console.log('[RevenueCat Debug] Monthly product:', {
-            priceString: allOfferings.current.monthly.product.priceString,
-            price: allOfferings.current.monthly.product.price,
-            currencyCode: allOfferings.current.monthly.product.currencyCode,
-            identifier: allOfferings.current.monthly.product.identifier,
-          });
-        }
       }
 
       setIsLoading(false);

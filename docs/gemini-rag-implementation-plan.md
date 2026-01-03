@@ -911,6 +911,24 @@ Bundle ID: com.banquetkuma.concretediagnostician
 - Development Build または Production Build が必要
 - Web版では「モバイルアプリをご利用ください」メッセージを表示済み
 
+#### ⚠️ 価格表示に関する重要な注意
+
+**RevenueCatがUSD価格を返す問題**により、アプリ側で価格をハードコードしています。
+
+| ファイル | 変更箇所 |
+|---------|---------|
+| `app/(tabs)/subscription.tsx` | Line 151: `<ThemedText style={styles.price}>¥300</ThemedText>` |
+
+**App Store Connectでサブスクリプション価格を変更した場合**、上記のハードコード値も手動で更新する必要があります。
+
+```tsx
+// 現在のハードコード値
+<ThemedText style={styles.price}>¥300</ThemedText>
+<ThemedText style={styles.pricePeriod}> / 月</ThemedText>
+```
+
+この問題はRevenueCat SDKがAppleから正しいローカライズ価格（`priceString`）を取得できていないことが原因です。将来的にRevenueCatの設定が修正されれば、動的な価格表示に戻すことができます。
+
 ---
 
 ## 2025-01-02 作業ログ
