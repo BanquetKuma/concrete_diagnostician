@@ -34,4 +34,4 @@
 
 ---
 
-© 2024 コンクリート診断士対策アプリ運営チーム. All Rights Reserved.
+© 2024 コンクリート診断士対策アプリ開発チーム. All Rights Reserved.
