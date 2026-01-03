@@ -11,7 +11,7 @@
 ## 運営者情報
 
 - 運営者名: Sho Kumada
-- お問い合わせ: banquet.kuma@gmail.com
+- お問い合わせ: shadowgenoffice@gmail.com
 
 ## 収集する情報
 
@@ -100,7 +100,7 @@
 
 プライバシーに関するお問い合わせは、以下までご連絡ください：
 
-- メール: banquet.kuma@gmail.com
+- メール: shadowgenoffice@gmail.com
 
 ---
 

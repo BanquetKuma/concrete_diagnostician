@@ -93,7 +93,7 @@
 
 本規約に関するお問い合わせは、以下までご連絡ください。
 
-- メール: banquet.kuma@gmail.com
+- メール: shadowgenoffice@gmail.com
 
 ---
 

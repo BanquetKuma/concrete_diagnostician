@@ -30,7 +30,7 @@
 
 ## お問い合わせ
 
-- メール: banquet.kuma@gmail.com
+- メール: shadowgenoffice@gmail.com
 
 ---
 

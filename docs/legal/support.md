@@ -94,7 +94,7 @@ A: アプリ内からアカウントを削除できます。
 
 ### メール
 
-banquet.kuma@gmail.com
+shadowgenoffice@gmail.com
 
 ### ご連絡の際のお願い
 
