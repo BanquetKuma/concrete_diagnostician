@@ -153,6 +153,10 @@ export default function SubscriptionScreen() {
                     </ThemedText>
                     <ThemedText style={styles.pricePeriod}> / 月</ThemedText>
                   </ThemedView>
+                  {/* DEBUG: 削除予定 - RevenueCatの返す値を確認 */}
+                  <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
+                    Debug: {offerings.monthly.product.currencyCode} / {offerings.monthly.product.price}
+                  </ThemedText>
                   <TouchableOpacity
                     style={[styles.purchaseButton, isLoading && styles.disabledButton]}
                     onPress={handlePurchase}
@@ -309,8 +313,9 @@ const styles = StyleSheet.create({
   },
   priceContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 8,
   },
   price: {
     fontSize: 32,
