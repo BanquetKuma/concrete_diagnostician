@@ -101,9 +101,6 @@ export default function SubscriptionScreen() {
             backgroundColor: isProMember ? '#10B981' : colors.card,
             borderColor: isProMember ? '#10B981' : colors.border
           }]}>
-            <ThemedText style={[styles.statusIcon, isProMember && styles.whiteText]}>
-              {isProMember ? '⭐' : '👤'}
-            </ThemedText>
             <ThemedText type="defaultSemiBold" style={[styles.statusTitle, isProMember && styles.whiteText]}>
               {isProMember ? 'Pro会員' : '無料会員'}
             </ThemedText>
