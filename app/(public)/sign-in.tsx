@@ -151,10 +151,25 @@ export default function SignInScreen() {
             <Text style={styles.buttonText}>GitHubでサインイン</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>または</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, styles.skipButton]}
+          onPress={() => router.replace('/(tabs)')}
+          disabled={isLoading}
+        >
+          <Text style={styles.skipButtonText}>サインインせずに始める</Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.footerText}>
-        サインインすることで、学習履歴を保存できます
+        サインインなしでも学習できます{'\n'}
+        （学習履歴はこのデバイスに保存されます）
       </Text>
     </View>
   );
@@ -226,5 +241,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textAlign: 'center',
+    lineHeight: 18,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 14,
+    color: '#999',
+  },
+  skipButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  skipButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -35,11 +35,12 @@ function AuthGuard() {
 
     const inPublicGroup = segments[0] === '(public)';
 
+    // サインイン済みでpublicグループにいる場合のみリダイレクト
+    // 未サインインでもアプリ使用可能（ゲストアクセス）
     if (isSignedIn && inPublicGroup) {
       router.replace('/(tabs)');
-    } else if (!isSignedIn && !inPublicGroup) {
-      router.replace('/(public)/sign-in');
     }
+    // 注: 未サインインユーザーへの強制リダイレクトを削除（Apple Guideline 5.1.1対応）
   }, [isSignedIn, isLoaded, isNavigationReady]);
 
   if (!isLoaded) {
