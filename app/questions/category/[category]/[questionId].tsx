@@ -107,25 +107,27 @@ export default function CategoryQuestionScreen() {
   }, [question, category, categoryLabel, isLocked, getFreeLimitForCategory, router]);
 
   const handleChoiceSelect = async (choiceId: string) => {
-    if (isAnswered || !question || !user) return;
+    if (isAnswered || !question) return;
 
+    // UI更新は常に実行（回答を表示）
     setSelectedChoiceId(choiceId);
     setIsAnswered(true);
     setShowExplanation(true);
 
     const isCorrect = choiceId === question.correctChoiceId;
 
-    try {
-      // Save answer to progress service
-      await progressService.saveAnswer(
-        user.id,
-        questionId as string,
-        choiceId,
-        isCorrect
-      );
-    } catch (error) {
-      console.error('Failed to save answer:', error);
-      // Don't show error to user, continue with UI feedback
+    // 進捗保存はuserがある場合のみ
+    if (user) {
+      try {
+        await progressService.saveAnswer(
+          user.id,
+          questionId as string,
+          choiceId,
+          isCorrect
+        );
+      } catch (error) {
+        console.error('Failed to save answer:', error);
+      }
     }
   };
 

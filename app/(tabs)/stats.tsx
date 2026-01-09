@@ -48,7 +48,12 @@ export default function StatsScreen() {
   useFocusEffect(
     useCallback(() => {
       const loadProgress = async () => {
-        if (!user) return;
+        if (!user) {
+          // ゲストモードでは統計データなし
+          setProgress(null);
+          setIsLoading(false);
+          return;
+        }
 
         try {
           setIsLoading(true);

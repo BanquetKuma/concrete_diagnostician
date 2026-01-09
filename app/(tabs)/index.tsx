@@ -263,30 +263,34 @@ export default function HomeScreen() {
           )}
         </ThemedView>
 
-        {/* Clear all history button */}
-        <ThemedView style={styles.clearAllContainer}>
-          <TouchableOpacity
-            style={styles.clearAllButton}
-            onPress={handleClearAllHistory}
-          >
-            <ThemedText style={styles.clearAllButtonText}>
-              全学習履歴をクリア
-            </ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
+        {/* Clear all history button - only show for signed-in users */}
+        {user?.id && (
+          <ThemedView style={styles.clearAllContainer}>
+            <TouchableOpacity
+              style={styles.clearAllButton}
+              onPress={handleClearAllHistory}
+            >
+              <ThemedText style={styles.clearAllButtonText}>
+                全学習履歴をクリア
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        )}
 
-        {/* Delete account button */}
-        <ThemedView style={styles.deleteAccountContainer}>
-          <View style={styles.separator} />
-          <TouchableOpacity
-            style={styles.deleteAccountButton}
-            onPress={handleDeleteAccount}
-          >
-            <ThemedText style={styles.deleteAccountButtonText}>
-              アカウントを削除
-            </ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
+        {/* Delete account button - only show for signed-in users */}
+        {user?.id && (
+          <ThemedView style={styles.deleteAccountContainer}>
+            <View style={styles.separator} />
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={handleDeleteAccount}
+            >
+              <ThemedText style={styles.deleteAccountButtonText}>
+                アカウントを削除
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        )}
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
