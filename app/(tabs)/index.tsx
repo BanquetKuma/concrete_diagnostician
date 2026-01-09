@@ -19,7 +19,7 @@ const heroImage = require('@/assets/images/app_hero.png');
 export default function HomeScreen() {
   const { user, isLoading, error, refreshUser, clearSession } = useUserContext();
   const { categories, isLoading: isLoadingCategories, error: categoriesError, refetch: refetchCategories } = useCategories();
-  const { signOut } = useAuth();
+  const { signOut, isSignedIn } = useAuth();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -200,12 +200,18 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.container}>
         <ThemedView style={styles.content}>
-        {/* Header with logout button */}
+        {/* Header with login/logout button */}
         <View style={styles.headerRow}>
           <View style={styles.headerSpacer} />
-          <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
-            <ThemedText style={styles.logoutButtonText}>ログアウト</ThemedText>
-          </TouchableOpacity>
+          {isSignedIn ? (
+            <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
+              <ThemedText style={styles.logoutButtonText}>ログアウト</ThemedText>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => router.push('/(public)/sign-in')} style={styles.loginButton}>
+              <ThemedText style={styles.loginButtonText}>ログイン</ThemedText>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Hero Image */}
@@ -329,6 +335,18 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 13,
     color: '#dc2626',
+    fontWeight: '500',
+  },
+  loginButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  loginButtonText: {
+    fontSize: 13,
+    color: '#007AFF',
     fontWeight: '500',
   },
   heroContainer: {

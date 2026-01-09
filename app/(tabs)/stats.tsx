@@ -3,7 +3,7 @@
 import { StyleSheet, ScrollView, View, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 
 import { ThemedView } from '@/components/ThemedView';
@@ -18,7 +18,8 @@ export default function StatsScreen() {
   const { user } = useUserContext();
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { signOut } = useAuth();
+  const { signOut, isSignedIn } = useAuth();
+  const router = useRouter();
 
   const handleSignOut = useCallback(async () => {
     if (Platform.OS === 'web') {
@@ -74,12 +75,18 @@ export default function StatsScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.container}>
         <ThemedView style={styles.content}>
-          {/* Header with logout button */}
+          {/* Header with login/logout button */}
           <View style={styles.headerRow}>
             <View style={styles.headerSpacer} />
-            <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
-              <ThemedText style={styles.logoutButtonText}>ログアウト</ThemedText>
-            </TouchableOpacity>
+            {isSignedIn ? (
+              <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
+                <ThemedText style={styles.logoutButtonText}>ログアウト</ThemedText>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => router.push('/(public)/sign-in')} style={styles.loginButton}>
+                <ThemedText style={styles.loginButtonText}>ログイン</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
 
           <StudyStats progress={progress} isLoading={isLoading} />
@@ -126,6 +133,18 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 13,
     color: '#dc2626',
+    fontWeight: '500',
+  },
+  loginButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  loginButtonText: {
+    fontSize: 13,
+    color: '#007AFF',
     fontWeight: '500',
   },
 });
