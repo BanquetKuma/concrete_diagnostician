@@ -109,6 +109,22 @@ export default function SignInScreen() {
         <Text style={styles.subtitle}>試験対策アプリ</Text>
       </View>
 
+      <View style={styles.benefitsContainer}>
+        <Text style={styles.benefitsTitle}>サインインすると...</Text>
+        <View style={styles.benefitItem}>
+          <Text style={styles.benefitIcon}>✓</Text>
+          <Text style={styles.benefitText}>学習履歴をクラウドに保存</Text>
+        </View>
+        <View style={styles.benefitItem}>
+          <Text style={styles.benefitIcon}>✓</Text>
+          <Text style={styles.benefitText}>苦手分野の分析・統計機能</Text>
+        </View>
+        <View style={styles.benefitItem}>
+          <Text style={styles.benefitIcon}>✓</Text>
+          <Text style={styles.benefitText}>Proプランで全問題にアクセス</Text>
+        </View>
+      </View>
+
       <View style={styles.buttonContainer}>
         {error && (
           <View style={styles.errorContainer}>
@@ -185,7 +201,37 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 24,
+  },
+  benefitsContainer: {
+    width: '100%',
+    maxWidth: 300,
+    marginBottom: 32,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  benefitsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  benefitIcon: {
+    fontSize: 14,
+    color: '#4285F4',
+    marginRight: 8,
+    fontWeight: 'bold',
+  },
+  benefitText: {
+    fontSize: 13,
+    color: '#555',
   },
   title: {
     fontSize: 28,
