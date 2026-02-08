@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const STORAGE_KEYS = {
   USER_ID: 'userId',
   OFFLINE_ANSWERS: 'offlineAnswers',
+  ANNOUNCEMENT_V2_SEEN: 'announcement_v2_seen',
 } as const;
 
 // Secure storage for sensitive data (uses Expo SecureStore)

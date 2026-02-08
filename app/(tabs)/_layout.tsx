@@ -53,7 +53,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="subscription"
         options={{
-          title: 'プラン',
+          title: 'Pro版',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
       />

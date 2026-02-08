@@ -26,14 +26,14 @@ export default function SubscriptionScreen() {
   } = useRevenueCat();
 
   const handlePurchase = async () => {
-    if (!offerings?.monthly) {
+    if (!offerings?.lifetime) {
       Alert.alert('エラー', '購入可能なプランがありません');
       return;
     }
 
-    const success = await purchasePackage(offerings.monthly);
+    const success = await purchasePackage(offerings.lifetime);
     if (success) {
-      Alert.alert('成功', 'Proプランへのアップグレードが完了しました！');
+      Alert.alert('成功', 'Pro版の購入が完了しました！');
     }
   };
 
@@ -53,7 +53,7 @@ export default function SubscriptionScreen() {
         <ScrollView style={styles.container}>
           <ThemedView style={styles.content}>
             <View style={styles.headerSection}>
-              <ThemedText type="title">⭐ プラン</ThemedText>
+              <ThemedText type="title">⭐ Pro版を購入</ThemedText>
             </View>
 
             <View style={[styles.webNoticeCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -62,7 +62,7 @@ export default function SubscriptionScreen() {
                 モバイルアプリをご利用ください
               </ThemedText>
               <ThemedText style={styles.webNoticeText}>
-                サブスクリプションの購入・管理は、iOSまたはAndroidアプリからのみ可能です。
+                Pro版の購入・管理は、iOSまたはAndroidアプリからのみ可能です。
               </ThemedText>
             </View>
 
@@ -90,9 +90,9 @@ export default function SubscriptionScreen() {
         <ThemedView style={styles.content}>
           {/* Header */}
           <View style={styles.headerSection}>
-            <ThemedText type="title">⭐ プラン</ThemedText>
+            <ThemedText type="title">⭐ Pro版を購入</ThemedText>
             <ThemedText style={styles.subtitle}>
-              学習をもっと快適に
+              一度のお支払いで永久にご利用可能
             </ThemedText>
           </View>
 
@@ -143,26 +143,33 @@ export default function SubscriptionScreen() {
           {offerings && !isProMember && (
             <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#0a7ea4' }]}>
               <ThemedText type="subtitle" style={styles.pricingTitle}>
-                月額プラン
+                買い切りプラン
               </ThemedText>
-              {offerings.monthly && (
+              {offerings.lifetime && (
                 <>
                   <ThemedView style={styles.priceContainer}>
-                    <ThemedText style={styles.price}>¥300</ThemedText>
-                    <ThemedText style={styles.pricePeriod}> / 月</ThemedText>
+                    <ThemedText
+                      style={styles.price}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {offerings.lifetime.product.priceString}
+                    </ThemedText>
+                    <ThemedText style={styles.pricePeriod}>（税込・買い切り）</ThemedText>
                   </ThemedView>
+                  <ThemedText style={styles.priceNote}>一度のお支払いで永久にご利用いただけます</ThemedText>
                   <TouchableOpacity
                     style={[styles.purchaseButton, isLoading && styles.disabledButton]}
                     onPress={handlePurchase}
                     disabled={isLoading}
                   >
                     <ThemedText style={styles.purchaseButtonText}>
-                      {isLoading ? '処理中...' : 'Proにアップグレード'}
+                      {isLoading ? '処理中...' : '購入する'}
                     </ThemedText>
                   </TouchableOpacity>
                 </>
               )}
-              {!offerings.monthly && (
+              {!offerings.lifetime && (
                 <ThemedText style={styles.noOfferingText}>
                   現在購入可能なプランがありません
                 </ThemedText>
@@ -185,9 +192,6 @@ export default function SubscriptionScreen() {
 
           {/* Legal Links */}
           <View style={styles.legalSection}>
-            <ThemedText style={styles.legalNote}>
-              サブスクリプションはいつでもキャンセル可能です。
-            </ThemedText>
             <View style={styles.legalLinks}>
               <TouchableOpacity
                 onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
@@ -310,16 +314,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
+    maxWidth: '100%',
   },
   price: {
     fontSize: 32,
     fontWeight: '700',
     color: '#0a7ea4',
     lineHeight: 44,
+    flexShrink: 1,
   },
   pricePeriod: {
     fontSize: 16,
     fontWeight: '400',
+  },
+  priceNote: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginTop: -4,
   },
   purchaseButton: {
     backgroundColor: '#0a7ea4',
@@ -385,11 +396,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 20,
     gap: 12,
-  },
-  legalNote: {
-    fontSize: 12,
-    opacity: 0.6,
-    textAlign: 'center',
   },
   legalLinks: {
     flexDirection: 'row',

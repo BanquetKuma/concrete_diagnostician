@@ -1,6 +1,6 @@
 import { StyleSheet, ScrollView, TouchableOpacity, Alert, Image, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ThemedText } from '@/components/ThemedText';
@@ -13,6 +13,9 @@ import { ErrorView } from '@/components/ui/ErrorView';
 import { useUserContext } from '@/contexts/UserContext';
 import { useCategories } from '@/hooks/useCategories';
 import { apiClient } from '@/lib/api/client';
+import { AnnouncementModal } from '@/components/AnnouncementModal';
+import { localStorage, STORAGE_KEYS } from '@/lib/utils/storage';
+import { useRevenueCat } from '@/hooks/useRevenueCat';
 // Hero image for the app
 const heroImage = require('@/assets/images/app_hero.png');
 
@@ -20,9 +23,26 @@ export default function HomeScreen() {
   const { user, isLoading, error, refreshUser, clearSession } = useUserContext();
   const { categories, isLoading: isLoadingCategories, error: categoriesError, refetch: refetchCategories } = useCategories();
   const { signOut, isSignedIn } = useAuth();
+  const { isProMember } = useRevenueCat();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  useEffect(() => {
+    const checkAnnouncement = async () => {
+      const seen = await localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENT_V2_SEEN);
+      if (!seen) {
+        setShowAnnouncement(true);
+      }
+    };
+    checkAnnouncement();
+  }, []);
+
+  const handleCloseAnnouncement = useCallback(async () => {
+    await localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENT_V2_SEEN, 'true');
+    setShowAnnouncement(false);
+  }, []);
 
   const handleSignOut = useCallback(async () => {
     if (Platform.OS === 'web') {
@@ -299,6 +319,11 @@ export default function HomeScreen() {
         )}
         </ThemedView>
       </ScrollView>
+      <AnnouncementModal
+        visible={showAnnouncement}
+        isProMember={isProMember}
+        onClose={handleCloseAnnouncement}
+      />
     </SafeAreaView>
   );
 }
