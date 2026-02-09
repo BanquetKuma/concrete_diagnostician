@@ -1,135 +1,125 @@
 # 開発進捗レポート
 
-作成日: 2025-08-24
+最終更新: 2026-02-08
 
-## 完了したフェーズ
+## 現在のステータス
+
+**App Store 審査再提出待ち（v1.0.1 ビルド中）**
+
+v1.0.0 は App Store Connect への submit 済みだが、ゲストユーザー向けログインボタン追加等の変更を反映した再ビルドが必要になった。
+`expo.version` が `1.0.0` のままだったため `You've already submitted this version` エラーで auto-submit が失敗。
+`1.0.1` にバンプし、Windows PowerShell から `eas build --profile production --platform ios --auto-submit` を実行する段階。
+
+---
+
+## 次回再開時の作業（iPhone 実機確認）
+
+### 1. Production ビルド + Submit 実行
+
+Windows PowerShell で以下を実行:
+
+```powershell
+cd C:\dev\IOS_App_Dev\concrete_diagnostician
+eas build --profile production --platform ios --auto-submit
+```
+
+- `expo.version`: `1.0.1`（済）
+- `ios.buildNumber`: `autoIncrement: true` により自動インクリメント
+
+### 2. TestFlight で動作確認
+
+ビルド完了後（10-20分）+ App Store Connect 処理（5-30分）を待ち:
+
+1. TestFlight で v1.0.1 をインストール
+2. 以下を確認:
+   - アプリ起動・ホーム画面表示
+   - 問題演習の動作（解答→正誤判定→解説表示）
+   - ゲストモードでの動作
+   - ゲストユーザー向けヘッダーログインボタンの表示・動作
+   - サブスクリプション画面の表示
+   - お知らせモーダルの表示
+
+### 3. App Store 用スクリーンショット撮影
+
+TestFlight で確認後、App Store 提出用のスクリーンショットを撮影:
+
+- 6.7インチ (iPhone 15 Pro Max): 1290 x 2796 px
+- 6.9インチ (iPhone 16 Pro Max): 1320 x 2868 px
+
+---
+
+## 完了済みフェーズ
 
 ### フェーズ0: プロジェクト初期設定 ✅
 
-1. **Expo Routerの設定確認**
-   - ファイルベースルーティングが正常に動作
-   - TypeScript対応完了
+- Expo Router ファイルベースルーティング設定
+- TypeScript strict mode 設定
+- ESLint/Prettier 設定
+- ディレクトリ構造整理
+- Azure 環境の設計と計画
 
-2. **TypeScript設定の最適化**
-   - 厳密な型チェック設定
-   - パスエイリアス(@/)設定
+### フェーズ1: 基本機能実装 ✅
 
-3. **ESLint/Prettierの設定**
-   - コード品質管理ツール導入
-   - 自動フォーマット設定
+- デバイスベースユーザー管理（Expo SecureStore）
+- ホーム画面 UI（年度別問題リスト + 進捗表示）
+- API クライアント実装
 
-4. **基本的なディレクトリ構造の整理**
-   ```
-   /lib        - ユーティリティ、型定義、API
-   /services   - ビジネスロジック
-   /hooks      - カスタムReactフック
-   /contexts   - グローバル状態管理
-   /components - 再利用可能コンポーネント
-   ```
+### フェーズ2: コア機能（問題演習） ✅
 
-5. **Azure環境の設計と計画**
-   - インフラストラクチャ設計文書作成
-   - API設定ファイル作成
-   - 環境変数テンプレート作成
+- 問題表示 UI
+- 4択解答ロジック
+- 正誤判定 + フィードバック（緑/赤ハイライト）
+- 解説表示
+- 学習履歴保存
 
-### フェーズ1: 基本機能実装（一部） ✅
+### フェーズ3: バックエンド + 認証 ✅
 
-1. **ユーザーID管理実装**
-   - デバイスベースのユーザー識別システム実装
-   - Expo SecureStore によるセキュアな保存
-   - ユーザーサービス（UserService）実装
-   - React Context によるグローバル状態管理
+- Cloudflare Workers + Turso DB（Hono フレームワーク）
+- Clerk 認証（Apple / Google / GitHub OAuth）
+- RevenueCat サブスクリプション（月額プラン）
+- 統計画面（正答率、学習進捗）
 
-2. **ホーム画面UI実装**
-   - 年度別問題リスト表示コンポーネント
-   - プログレスバー付き進捗表示
-   - エラーハンドリングとローディング状態
+### フェーズ4: App Store リリース準備 ✅
 
-3. **Azure Functions連携準備**
-   - APIクライアント実装
-   - エラーハンドリング機構
-   - オフライン対応（フォールバック）
+- EAS Build 設定（production プロファイル）
+- App Store Connect 設定
+- iPad 非対応設定（Guideline 2.3.3 対策）
+- ゲストアクセス追加（Guideline 5.1.1 対策）
+- ゲストユーザー向けヘッダーログインボタン追加
+- お知らせモーダル機能追加
 
-## 実装済み機能
+---
 
-### ユーザー管理
-- ✅ UUID生成によるユーザー識別
-- ✅ Expo SecureStore でのセキュアな保存
-- ✅ 初回起動時の自動ユーザー作成
-- ✅ バックエンドAPIとの連携（オフライン対応）
+## 直近の変更履歴（git log）
 
-### UI/UX
-- ✅ ダークモード対応
-- ✅ 年度別問題リスト表示
-- ✅ 進捗バー表示（パーセンテージ付き）
-- ✅ エラー状態の適切な表示
-- ✅ ローディング状態の表示
+| コミット | 内容 |
+|----------|------|
+| `68235d2` | Version 1.0.1 バンプ、CLAUDE.md に EAS submit 注意事項追加 |
+| `0481e19` | ゲストユーザー向けヘッダーログインボタン追加 |
+| `8e93897` | ゲストモードバグ修正（解答表示、統計読込、アカウントボタン） |
+| `54cfd46` | ログイン画面にサインインメリット表示追加 |
+| `3001f53` | ゲストアクセス追加（Apple Guideline 5.1.1 対応） |
+| `d8358ad` | iPad サポート無効化（App Store 審査対応） |
 
-### 開発環境
-- ✅ TypeScript による型安全性
-- ✅ ESLint/Prettier による品質管理
-- ✅ モックデータによる開発
-- ✅ Azure統合の準備完了
+---
 
-## 現在の画面構成
+## 既知の課題
 
-1. **ホーム画面**
-   - ユーザー情報表示（デバッグ用）
-   - 年度別問題リスト
-   - 各年度の進捗状況
+- **AUTH-001**: 異なる OAuth プロバイダ間で学習履歴が共有されない（優先度: 低、将来対応）
+- **GIT-001**: RAG 用巨大 PDF ファイルは git 管理対象外
 
-2. **タブナビゲーション**
-   - ホーム
-   - 探索（デフォルト）
+詳細は `docs/remaining-issues.md` を参照。
+
+---
 
 ## 技術スタック
 
-- **フロントエンド**
-  - React Native 0.79.5
-  - Expo SDK 53
-  - TypeScript (strict mode)
-  - Expo Router (ファイルベースルーティング)
-
-- **状態管理**
-  - React Context API
-  - カスタムフック
-
-- **ストレージ**
-  - Expo SecureStore (セキュアデータ)
-  - AsyncStorage (一般データ)
-
-- **バックエンド準備**
-  - Azure Functions
-  - Azure Cosmos DB
-  - Azure OpenAI Service
-  - Azure Blob Storage
-
-## 次のステップ（フェーズ2）
-
-1. **問題データ構造設計**
-2. **問題表示UI実装**
-3. **解答ロジック実装**
-4. **正誤判定機能**
-5. **解説表示機能**
-
-## 課題と対策
-
-### 解決済み
-- WSL2でのモバイルテスト問題 → Windows PowerShell使用で解決
-- TypeScript厳密モードのエラー → 設定調整で解決
-
-### 今後の課題
-- Azure環境の実際のセットアップ
-- 問題コンテンツの準備
-- App Store審査対策
-
-## コード品質指標
-
-- TypeScript型チェック: ✅ パス
-- ESLint: ✅ エラーなし
-- Prettier: ✅ 自動フォーマット済み
-- ディレクトリ構造: ✅ 整理済み
-
-## まとめ
-
-プロジェクトは予定通り進行しています。基本的なアーキテクチャが確立され、ユーザー管理と基本UIが実装されました。次のフェーズでは、コア機能である問題演習機能の実装に入ります。
+| レイヤー | 技術 |
+|----------|------|
+| フロントエンド | Expo SDK 53 / React Native / TypeScript |
+| ルーティング | Expo Router（ファイルベース） |
+| 認証 | Clerk（Apple / Google / GitHub OAuth） |
+| 課金 | RevenueCat（App Store IAP） |
+| バックエンド | Cloudflare Workers + Hono |
+| データベース | Turso（libSQL） |
+| ビルド・配信 | EAS Build / EAS Submit / TestFlight |

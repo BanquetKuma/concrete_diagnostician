@@ -90,10 +90,12 @@ export default function SubscriptionScreen() {
         <ThemedView style={styles.content}>
           {/* Header */}
           <View style={styles.headerSection}>
-            <ThemedText type="title">⭐ Pro版を購入</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              一度のお支払いで永久にご利用可能
-            </ThemedText>
+            <ThemedText type="title">{isProMember ? '⭐ Pro版を購入済み' : '⭐ Pro版を購入'}</ThemedText>
+            {!isProMember && (
+              <ThemedText style={styles.subtitle}>
+                一度のお支払いで永久にご利用可能
+              </ThemedText>
+            )}
           </View>
 
           {/* Current Status */}
