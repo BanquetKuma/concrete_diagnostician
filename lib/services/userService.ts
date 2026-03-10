@@ -36,14 +36,14 @@ export const userService = {
    * Initialize user - get existing or create new
    */
   async initializeUser(): Promise<AppUser> {
-    try {
-      // Get or generate device ID
-      let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
-      if (!deviceId) {
-        deviceId = generateDeviceId();
-        await SecureStore.setItemAsync(DEVICE_ID_KEY, deviceId);
-      }
+    // Get or generate device ID (never overwrite existing)
+    let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+    if (!deviceId) {
+      deviceId = generateDeviceId();
+      await SecureStore.setItemAsync(DEVICE_ID_KEY, deviceId);
+    }
 
+    try {
       // Register/get user with device ID
       const response = await apiClient.registerUser(deviceId);
       const user = response.user;
@@ -60,15 +60,16 @@ export const userService = {
     } catch (error) {
       console.error('Failed to initialize user:', error);
 
-      // Fallback: create local-only user for offline capability
-      const fallbackDeviceId = generateDeviceId();
-      const fallbackId = `local_${fallbackDeviceId}`;
-      await SecureStore.setItemAsync(USER_ID_KEY, fallbackId);
-      await SecureStore.setItemAsync(DEVICE_ID_KEY, fallbackDeviceId);
+      // Fallback: use existing userId if available, never overwrite device ID
+      const existingUserId = await SecureStore.getItemAsync(USER_ID_KEY);
+      const fallbackId = existingUserId || `local_${deviceId}`;
+      if (!existingUserId) {
+        await SecureStore.setItemAsync(USER_ID_KEY, fallbackId);
+      }
 
       return {
         id: fallbackId,
-        deviceId: fallbackDeviceId,
+        deviceId,
         createdAt: new Date().toISOString(),
         lastAccessedAt: new Date(),
       };
