@@ -148,6 +148,17 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
     }
   }, [isInitialized, updateProStatus]);
 
+  // Ensure RevenueCat is logged in with Clerk User ID before purchase/restore
+  const ensureLoggedIn = useCallback(async () => {
+    if (clerkUserId) {
+      try {
+        await Purchases.logIn(clerkUserId);
+      } catch (err) {
+        console.error('RevenueCat logIn failed:', err);
+      }
+    }
+  }, [clerkUserId]);
+
   // Purchase a package
   const purchasePackage = useCallback(
     async (pkg: PurchasesPackage): Promise<boolean> => {
@@ -159,6 +170,9 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
       try {
         setIsLoading(true);
         setError(null);
+
+        // Clerk User ID でログイン済みであることを保証（匿名IDへの購入紐付けを防止）
+        await ensureLoggedIn();
 
         const { customerInfo: newInfo } = await Purchases.purchasePackage(pkg);
         setCustomerInfo(newInfo);
@@ -185,7 +199,7 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
         return false;
       }
     },
-    [isInitialized, updateProStatus]
+    [isInitialized, ensureLoggedIn, updateProStatus]
   );
 
   // Restore purchases
@@ -198,6 +212,9 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
     try {
       setIsLoading(true);
       setError(null);
+
+      // Clerk User ID でログイン済みであることを保証（正しい顧客コンテキストで復元）
+      await ensureLoggedIn();
 
       const info = await Purchases.restorePurchases();
       setCustomerInfo(info);
@@ -218,7 +235,7 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
       console.error('Restore failed:', err);
       return false;
     }
-  }, [isInitialized, updateProStatus]);
+  }, [isInitialized, ensureLoggedIn, updateProStatus]);
 
   // Load cached status on mount, then initialize
   useEffect(() => {
