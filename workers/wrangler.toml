@@ -8,3 +8,6 @@ ENVIRONMENT = "production"
 # シークレットは wrangler secret put で設定
 # TURSO_DATABASE_URL
 # TURSO_AUTH_TOKEN
+# GOOGLE_API_KEY           (Gemini API key for RAG chat)
+# FILE_SEARCH_STORE_NAME   (e.g. fileSearchStores/concretediagnosticiantextbo-0uzz0ql8wznf)
+# GEMINI_MODEL             (optional, defaults to gemini-2.5-pro)

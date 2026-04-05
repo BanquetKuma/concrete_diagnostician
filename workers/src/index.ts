@@ -4,10 +4,14 @@ import questions from './routes/questions';
 import users from './routes/users';
 import answers from './routes/answers';
 import progress from './routes/progress';
+import chat from './routes/chat';
 
 type Bindings = {
   TURSO_DATABASE_URL: string;
   TURSO_AUTH_TOKEN: string;
+  GOOGLE_API_KEY: string;
+  FILE_SEARCH_STORE_NAME: string;
+  GEMINI_MODEL?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -38,5 +42,8 @@ app.route('/api/answers', answers);
 
 // 進捗API
 app.route('/api/progress', progress);
+
+// チャットAPI（RAG）
+app.route('/api/chat', chat);
 
 export default app;
