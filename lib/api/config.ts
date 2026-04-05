@@ -58,4 +58,8 @@ export const API_ENDPOINTS = {
     byYear: (userId: string, year: number) => `/api/progress/${userId}/year/${year}`,
     byCategory: (userId: string, category: string) => `/api/progress/${userId}/category/${category}`,
   },
+  chat: {
+    send: '/api/chat',
+    usage: (userId: string) => `/api/chat/usage/${userId}`,
+  },
 } as const;

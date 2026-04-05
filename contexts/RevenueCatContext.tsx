@@ -10,13 +10,16 @@ import Purchases, {
 } from 'react-native-purchases';
 
 const ENTITLEMENT_ID = 'pro';
+const PREMIUM_ENTITLEMENT_ID = 'premium';
 const PRO_STATUS_CACHE_KEY = 'revenuecat_pro_status';
+const PREMIUM_STATUS_CACHE_KEY = 'revenuecat_premium_status';
 const MAX_INIT_RETRIES = 3;
 const isExpoGo = Constants.appOwnership === 'expo';
 
 interface RevenueCatContextValue {
   isInitialized: boolean;
   isProMember: boolean;
+  isPremiumMember: boolean;
   customerInfo: CustomerInfo | null;
   offerings: PurchasesOffering | null;
   isLoading: boolean;
@@ -36,6 +39,7 @@ interface RevenueCatProviderProps {
 export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProMember, setIsProMember] = useState(false);
+  const [isPremiumMember, setIsPremiumMember] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,32 +47,47 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
   const retryCountRef = useRef(0);
   const appStateRef = useRef(AppState.currentState);
 
-  // Load cached Pro status from SecureStore
+  // Load cached Pro/Premium status from SecureStore
   const loadCachedProStatus = useCallback(async () => {
     try {
-      const cached = await SecureStore.getItemAsync(PRO_STATUS_CACHE_KEY);
-      if (cached === 'true') {
+      const [cachedPro, cachedPremium] = await Promise.all([
+        SecureStore.getItemAsync(PRO_STATUS_CACHE_KEY),
+        SecureStore.getItemAsync(PREMIUM_STATUS_CACHE_KEY),
+      ]);
+      const isPremium = cachedPremium === 'true';
+      // Premium includes Pro, so treat cached premium as pro too
+      if (cachedPro === 'true' || isPremium) {
         setIsProMember(true);
+      }
+      if (isPremium) {
+        setIsPremiumMember(true);
       }
     } catch {
       // Ignore cache read errors
     }
   }, []);
 
-  // Persist Pro status to SecureStore
-  const cacheProStatus = useCallback(async (isPro: boolean) => {
+  // Persist Pro/Premium status to SecureStore
+  const cacheEntitlementStatus = useCallback(async (isPro: boolean, isPremium: boolean) => {
     try {
-      await SecureStore.setItemAsync(PRO_STATUS_CACHE_KEY, isPro ? 'true' : 'false');
+      await Promise.all([
+        SecureStore.setItemAsync(PRO_STATUS_CACHE_KEY, isPro ? 'true' : 'false'),
+        SecureStore.setItemAsync(PREMIUM_STATUS_CACHE_KEY, isPremium ? 'true' : 'false'),
+      ]);
     } catch {
       // Ignore cache write errors
     }
   }, []);
 
   const updateProStatus = useCallback((info: CustomerInfo) => {
-    const isPro = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+    const hasPro = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+    const hasPremium = info.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
+    // Premium includes Pro features
+    const isPro = hasPro || hasPremium;
     setIsProMember(isPro);
-    cacheProStatus(isPro);
-  }, [cacheProStatus]);
+    setIsPremiumMember(hasPremium);
+    cacheEntitlementStatus(isPro, hasPremium);
+  }, [cacheEntitlementStatus]);
 
   // Initialize RevenueCat with retry
   const initializeRevenueCat = useCallback(async () => {
@@ -179,7 +198,10 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
         updateProStatus(newInfo);
 
         setIsLoading(false);
-        return newInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
+        return (
+          newInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
+          newInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined
+        );
       } catch (err: unknown) {
         setIsLoading(false);
 
@@ -222,7 +244,9 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
 
       setIsLoading(false);
 
-      const restored = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      const restored =
+        info.entitlements.active[ENTITLEMENT_ID] !== undefined ||
+        info.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
       if (!restored) {
         setError('復元可能な購入が見つかりませんでした');
       }
@@ -304,6 +328,7 @@ export function RevenueCatProvider({ children, clerkUserId }: RevenueCatProvider
   const value: RevenueCatContextValue = {
     isInitialized,
     isProMember,
+    isPremiumMember,
     customerInfo,
     offerings,
     isLoading,

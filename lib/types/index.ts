@@ -107,6 +107,25 @@ export class ApiError extends Error {
   }
 }
 
+// ===== Chat / RAG =====
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatUsage {
+  dailyUsed: number;
+  dailyLimit: number;
+  monthlyUsed: number;
+  monthlyLimit: number;
+}
+
+export interface ChatResponse {
+  reply: string;
+  usage: ChatUsage;
+}
+
 /** @deprecated Use QuestionChoice instead */
 export type Choice = QuestionChoice;
 

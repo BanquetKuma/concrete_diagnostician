@@ -16,6 +16,9 @@ import type {
   OverallProgress,
   UserProgress,
   CategoryProgress,
+  ChatMessage,
+  ChatResponse,
+  ChatUsage,
 } from '@/lib/types';
 import { ApiError } from '@/lib/types';
 
@@ -33,6 +36,9 @@ export type {
   OverallProgress,
   UserProgress,
   CategoryProgress,
+  ChatMessage,
+  ChatResponse,
+  ChatUsage,
 };
 export { ApiError };
 
@@ -296,6 +302,23 @@ class ApiClient {
     }[];
   }> {
     return this.request(API_ENDPOINTS.progress.byCategory(userId, category));
+  }
+
+  // Chat API methods
+  async postChat(
+    userId: string,
+    message: string,
+    history: ChatMessage[],
+    questionContext?: string
+  ): Promise<ChatResponse> {
+    return this.request(API_ENDPOINTS.chat.send, {
+      method: 'POST',
+      body: JSON.stringify({ userId, message, history, questionContext }),
+    });
+  }
+
+  async getChatUsage(userId: string): Promise<{ usage: ChatUsage }> {
+    return this.request(API_ENDPOINTS.chat.usage(userId));
   }
 
   // Health check

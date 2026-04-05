@@ -51,6 +51,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'AIチャット',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="ellipsis.bubble.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="subscription"
         options={{
           title: 'Pro版',
