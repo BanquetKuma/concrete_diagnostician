@@ -21,6 +21,7 @@ import { useQuestionNavigation } from '@/hooks/useQuestionNavigation';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useQuestionAccess } from '@/hooks/useQuestionAccess';
+import { useChatAccess } from '@/hooks/useChatAccess';
 import { getCategoryLabel } from '@/constants/Categories';
 
 export default function QuestionScreen() {
@@ -33,6 +34,7 @@ export default function QuestionScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useUserContext();
   const { isLocked, getFreeLimitForCategory } = useQuestionAccess();
+  const { canAccessChat } = useChatAccess();
 
   const navigation = useQuestionNavigation(
     year ? parseInt(year) : 0,
@@ -45,6 +47,18 @@ export default function QuestionScreen() {
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+
+  const handleAskAi = useCallback(() => {
+    if (!question) return;
+    if (!canAccessChat) {
+      router.push('/(tabs)/subscription');
+      return;
+    }
+    router.push({
+      pathname: '/(tabs)/chat',
+      params: { context: question.text },
+    });
+  }, [question, canAccessChat, router]);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -379,6 +393,21 @@ export default function QuestionScreen() {
           </ThemedView>
         )}
 
+        {/* Ask AI */}
+        {isAnswered && (
+          <TouchableOpacity
+            style={[styles.askAiButton, { borderColor: colors.tint }]}
+            onPress={handleAskAi}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="AIに質問する"
+          >
+            <ThemedText style={[styles.askAiButtonText, { color: colors.tint }]}>
+              💬 AIに質問する{canAccessChat ? '' : '（Premium限定）'}
+            </ThemedText>
+          </TouchableOpacity>
+        )}
+
         {/* Navigation */}
         {isAnswered && (
           <ThemedView style={styles.navigationContainer}>
@@ -529,6 +558,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     minWidth: 120,
+  },
+  askAiButton: {
+    marginTop: 12,
+    marginHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  askAiButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   previousButton: {
     backgroundColor: '#007AFF',
