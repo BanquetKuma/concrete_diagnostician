@@ -18,6 +18,7 @@ export default function SubscriptionScreen() {
   const {
     isInitialized,
     isProMember,
+    isPremiumMember,
     offerings,
     isLoading,
     error,
@@ -25,15 +26,25 @@ export default function SubscriptionScreen() {
     restorePurchases,
   } = useRevenueCat();
 
-  const handlePurchase = async () => {
+  const handlePurchasePro = async () => {
     if (!offerings?.lifetime) {
       Alert.alert('エラー', '購入可能なプランがありません');
       return;
     }
-
     const success = await purchasePackage(offerings.lifetime);
     if (success) {
       Alert.alert('成功', 'Pro版の購入が完了しました！');
+    }
+  };
+
+  const handlePurchasePremium = async () => {
+    if (!offerings?.monthly) {
+      Alert.alert('エラー', '購入可能なプランがありません');
+      return;
+    }
+    const success = await purchasePackage(offerings.monthly);
+    if (success) {
+      Alert.alert('成功', 'Premiumプランの購入が完了しました！');
     }
   };
 
@@ -45,6 +56,23 @@ export default function SubscriptionScreen() {
       Alert.alert('お知らせ', '復元可能な購入が見つかりませんでした');
     }
   };
+
+  // Header title based on membership
+  const headerTitle = isPremiumMember
+    ? '⭐ Premiumプラン利用中'
+    : isProMember
+      ? '⭐ Pro版を購入済み'
+      : '⭐ プランを選択';
+
+  // Status card config
+  const statusConfig = isPremiumMember
+    ? { color: '#6366F1', label: 'Premium会員', description: '全問題 + AIチャットが利用可能' }
+    : isProMember
+      ? { color: '#10B981', label: 'Pro会員', description: 'すべての問題（250問）にアクセス可能' }
+      : { color: colors.card, label: '無料会員', description: '各分野の基礎問題（約100問）が無料' };
+
+  const hasPaidPlan = isProMember || isPremiumMember;
+  const statusBorderColor = hasPaidPlan ? statusConfig.color : colors.border;
 
   // Web platform message
   if (Platform.OS === 'web') {
@@ -90,26 +118,24 @@ export default function SubscriptionScreen() {
         <ThemedView style={styles.content}>
           {/* Header */}
           <View style={styles.headerSection}>
-            <ThemedText type="title">{isProMember ? '⭐ Pro版を購入済み' : '⭐ Pro版を購入'}</ThemedText>
-            {!isProMember && (
+            <ThemedText type="title">{headerTitle}</ThemedText>
+            {!hasPaidPlan && (
               <ThemedText style={styles.subtitle}>
-                一度のお支払いで永久にご利用可能
+                学習スタイルに合ったプランをお選びください
               </ThemedText>
             )}
           </View>
 
           {/* Current Status */}
           <View style={[styles.statusCard, {
-            backgroundColor: isProMember ? '#10B981' : colors.card,
-            borderColor: isProMember ? '#10B981' : colors.border
+            backgroundColor: hasPaidPlan ? statusConfig.color : colors.card,
+            borderColor: statusBorderColor,
           }]}>
-            <ThemedText type="defaultSemiBold" style={[styles.statusTitle, isProMember && styles.whiteText]}>
-              {isProMember ? 'Pro会員' : '無料会員'}
+            <ThemedText type="defaultSemiBold" style={[styles.statusTitle, hasPaidPlan && styles.whiteText]}>
+              {statusConfig.label}
             </ThemedText>
-            <ThemedText style={[styles.statusDescription, isProMember && styles.whiteText]}>
-              {isProMember
-                ? 'すべての問題（250問）にアクセス可能'
-                : '各分野の基礎問題（約100問）が無料'}
+            <ThemedText style={[styles.statusDescription, hasPaidPlan && styles.whiteText]}>
+              {statusConfig.description}
             </ThemedText>
           </View>
 
@@ -120,67 +146,137 @@ export default function SubscriptionScreen() {
             </View>
           )}
 
-          {/* Pro Benefits */}
-          <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <ThemedText type="subtitle" style={styles.benefitsTitle}>
-              Proプランの特典
-            </ThemedText>
-            <View style={styles.benefitsList}>
-              <View style={styles.benefitItem}>
-                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                <ThemedText style={styles.benefitText}>全250問にアクセス可能（無料版は約100問）</ThemedText>
+          {/* ===== Premium Plan Section ===== */}
+          {/* Show to: free users, or Pro-only users who want to upgrade */}
+          {!isPremiumMember && (
+            <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.planHeader}>
+                <ThemedText type="subtitle" style={styles.benefitsTitle}>
+                  Premiumプランの特典
+                </ThemedText>
+                <View style={styles.recommendBadge}>
+                  <ThemedText style={styles.recommendBadgeText}>おすすめ</ThemedText>
+                </View>
               </View>
-              <View style={styles.benefitItem}>
-                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                <ThemedText style={styles.benefitText}>各分野の応用・発展問題を学習</ThemedText>
-              </View>
-              <View style={styles.benefitItem}>
-                <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                <ThemedText style={styles.benefitText}>広告なしで快適に学習</ThemedText>
+              <View style={styles.benefitsList}>
+                <View style={styles.benefitItem}>
+                  <ThemedText style={[styles.benefitIcon, { color: '#6366F1' }]}>✓</ThemedText>
+                  <ThemedText style={styles.benefitText}>Proプランの全特典を含む</ThemedText>
+                </View>
+                <View style={styles.benefitItem}>
+                  <ThemedText style={[styles.benefitIcon, { color: '#6366F1' }]}>✓</ThemedText>
+                  <ThemedText style={styles.benefitText}>AIチャットで教科書に基づく質問が可能</ThemedText>
+                </View>
+                <View style={styles.benefitItem}>
+                  <ThemedText style={[styles.benefitIcon, { color: '#6366F1' }]}>✓</ThemedText>
+                  <ThemedText style={styles.benefitText}>1日15通・月300通まで質問可能</ThemedText>
+                </View>
               </View>
             </View>
-          </View>
+          )}
 
-          {/* Pricing */}
-          {offerings && !isProMember && (
-            <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#0a7ea4' }]}>
+          {/* Premium Pricing */}
+          {offerings && !isPremiumMember && (
+            <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#6366F1' }]}>
               <ThemedText type="subtitle" style={styles.pricingTitle}>
-                買い切りプラン
+                Premiumプラン
               </ThemedText>
-              {offerings.lifetime && (
+              {offerings.monthly ? (
                 <>
                   <ThemedView style={styles.priceContainer}>
                     <ThemedText
-                      style={styles.price}
+                      style={[styles.price, { color: '#6366F1' }]}
                       numberOfLines={1}
                       adjustsFontSizeToFit
                     >
-                      {offerings.lifetime.product.priceString}
+                      {offerings.monthly.product.priceString}
                     </ThemedText>
-                    <ThemedText style={styles.pricePeriod}>（税込・買い切り）</ThemedText>
+                    <ThemedText style={styles.pricePeriod}>（税込・月額）</ThemedText>
                   </ThemedView>
-                  <ThemedText style={styles.priceNote}>一度のお支払いで永久にご利用いただけます</ThemedText>
+                  <ThemedText style={styles.priceNote}>全問題アクセス + AIチャット機能付き</ThemedText>
                   <TouchableOpacity
-                    style={[styles.purchaseButton, isLoading && styles.disabledButton]}
-                    onPress={handlePurchase}
+                    style={[styles.purchaseButton, { backgroundColor: '#6366F1' }, isLoading && styles.disabledButton]}
+                    onPress={handlePurchasePremium}
                     disabled={isLoading}
                   >
                     <ThemedText style={styles.purchaseButtonText}>
-                      {isLoading ? '処理中...' : '購入する'}
+                      {isLoading ? '処理中...' : 'Premiumに登録する'}
                     </ThemedText>
                   </TouchableOpacity>
                 </>
-              )}
-              {!offerings.lifetime && (
+              ) : (
                 <ThemedText style={styles.noOfferingText}>
-                  現在購入可能なプランがありません
+                  現在準備中です。しばらくお待ちください。
                 </ThemedText>
               )}
             </View>
           )}
 
-          {/* Restore Purchases */}
+          {/* ===== Pro Plan Section ===== */}
+          {/* Show to: free users only (Pro/Premium members already have Pro access) */}
           {!isProMember && (
+            <>
+              <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <ThemedText type="subtitle" style={styles.benefitsTitle}>
+                  Proプランの特典
+                </ThemedText>
+                <View style={styles.benefitsList}>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>全250問にアクセス可能（無料版は約100問）</ThemedText>
+                  </View>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>各分野の応用・発展問題を学習</ThemedText>
+                  </View>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>広告なしで快適に学習</ThemedText>
+                  </View>
+                </View>
+              </View>
+
+              {/* Pro Pricing */}
+              {offerings && (
+                <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#0a7ea4' }]}>
+                  <ThemedText type="subtitle" style={styles.pricingTitle}>
+                    買い切りプラン（Pro）
+                  </ThemedText>
+                  {offerings.lifetime ? (
+                    <>
+                      <ThemedView style={styles.priceContainer}>
+                        <ThemedText
+                          style={styles.price}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                        >
+                          {offerings.lifetime.product.priceString}
+                        </ThemedText>
+                        <ThemedText style={styles.pricePeriod}>（税込・買い切り）</ThemedText>
+                      </ThemedView>
+                      <ThemedText style={styles.priceNote}>一度のお支払いで永久にご利用いただけます</ThemedText>
+                      <TouchableOpacity
+                        style={[styles.purchaseButton, isLoading && styles.disabledButton]}
+                        onPress={handlePurchasePro}
+                        disabled={isLoading}
+                      >
+                        <ThemedText style={styles.purchaseButtonText}>
+                          {isLoading ? '処理中...' : '購入する'}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <ThemedText style={styles.noOfferingText}>
+                      現在購入可能なプランがありません
+                    </ThemedText>
+                  )}
+                </View>
+              )}
+            </>
+          )}
+
+          {/* Restore Purchases */}
+          {!hasPaidPlan && (
             <TouchableOpacity
               style={styles.restoreButton}
               onPress={handleRestore}
@@ -245,6 +341,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     opacity: 0.7,
     fontSize: 16,
+    textAlign: 'center',
   },
   statusCard: {
     padding: 24,
@@ -252,9 +349,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     gap: 8,
-  },
-  statusIcon: {
-    fontSize: 40,
   },
   statusTitle: {
     fontSize: 20,
@@ -276,6 +370,23 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#DC2626',
     textAlign: 'center',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  recommendBadge: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recommendBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   benefitsCard: {
     padding: 20,
@@ -300,6 +411,7 @@ const styles = StyleSheet.create({
   },
   benefitText: {
     fontSize: 15,
+    flex: 1,
   },
   pricingCard: {
     padding: 24,
