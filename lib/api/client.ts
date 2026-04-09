@@ -304,7 +304,7 @@ class ApiClient {
     return this.request(API_ENDPOINTS.progress.byCategory(userId, category));
   }
 
-  // Chat API methods
+  // Chat API methods (legacy non-streaming, kept for fallback)
   async postChat(
     userId: string,
     message: string,
@@ -315,6 +315,88 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ userId, message, history, questionContext }),
     });
+  }
+
+  /**
+   * SSE streaming chat. Returns an EventSource-like controller.
+   * Call `close()` on the returned object to abort.
+   */
+  postChatStream(
+    userId: string,
+    message: string,
+    history: ChatMessage[],
+    questionContext: string | undefined,
+    callbacks: {
+      onChunk: (text: string) => void;
+      onDone: (usage: ChatUsage) => void;
+      onError: (message: string) => void;
+    }
+  ): { close: () => void } {
+    const url = `${this.baseUrl}${API_ENDPOINTS.chat.send}`;
+    const body = JSON.stringify({ userId, message, history, questionContext });
+
+    // Use XMLHttpRequest for streaming SSE over POST in React Native
+    const xhr = new XMLHttpRequest();
+    let lastIndex = 0;
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onprogress = () => {
+      const newData = xhr.responseText.substring(lastIndex);
+      lastIndex = xhr.responseText.length;
+
+      // Parse SSE lines
+      const lines = newData.split('\n');
+      let currentEvent = '';
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          currentEvent = line.slice(7).trim();
+        } else if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6);
+          try {
+            const data = JSON.parse(dataStr);
+            if (currentEvent === 'chunk' && data.text) {
+              callbacks.onChunk(data.text);
+            } else if (currentEvent === 'done' && data.usage) {
+              callbacks.onDone(data.usage);
+            } else if (currentEvent === 'error' && data.message) {
+              callbacks.onError(data.message);
+            }
+          } catch {
+            // Ignore partial JSON
+          }
+        }
+      }
+    };
+
+    xhr.onerror = () => {
+      callbacks.onError('ネットワークエラーが発生しました');
+    };
+
+    xhr.onloadend = () => {
+      if (xhr.status === 429) {
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          callbacks.onError(errData.message || '送信上限に達しました');
+        } catch {
+          callbacks.onError('送信上限に達しました');
+        }
+      } else if (xhr.status >= 400) {
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          callbacks.onError(errData.message || errData.error || '送信に失敗しました');
+        } catch {
+          callbacks.onError('送信に失敗しました');
+        }
+      }
+    };
+
+    xhr.send(body);
+
+    return {
+      close: () => xhr.abort(),
+    };
   }
 
   async getChatUsage(userId: string): Promise<{ usage: ChatUsage }> {

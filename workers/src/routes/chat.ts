@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
+import { streamSSE } from 'hono/streaming';
 import { createDbClient } from '../lib/db';
 import { callGemini } from '../lib/gemini';
-import { ChatRequest, ChatResponse, ChatUsage } from '../types/chat';
+import { ChatRequest, ChatUsage } from '../types/chat';
 
 export interface ChatEnv {
   TURSO_DATABASE_URL: string;
@@ -14,6 +15,7 @@ export interface ChatEnv {
 const DAILY_LIMIT = 15;
 const MONTHLY_LIMIT = 300;
 const DEFAULT_MODEL = 'gemini-2.5-pro';
+const CHUNK_DELAY_MS = 30;
 
 const chat = new Hono<{ Bindings: ChatEnv }>();
 
@@ -35,8 +37,8 @@ async function getUsage(
   userId: string
 ): Promise<ChatUsage> {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
-  const monthPrefix = today.slice(0, 7) + '%'; // YYYY-MM%
+  const today = now.toISOString().slice(0, 10);
+  const monthPrefix = today.slice(0, 7) + '%';
 
   const dailyRes = await db.execute({
     sql: 'SELECT count FROM chat_usage WHERE user_id = ? AND date = ?',
@@ -71,75 +73,110 @@ async function incrementUsage(
   });
 }
 
-chat.post('/', async (c) => {
-  try {
-    const body = await c.req.json<ChatRequest>();
-
-    if (!body.userId || !body.message || typeof body.message !== 'string') {
-      return c.json({ error: 'userId and message are required' }, 400);
+/**
+ * Split text into chunks at natural boundaries (sentence endings, newlines,
+ * markdown headings) so streaming feels natural.
+ */
+function splitIntoChunks(text: string): string[] {
+  const chunks: string[] = [];
+  // Split on: sentence-ending punctuation, newlines, markdown headings
+  const parts = text.split(/(?<=[。！？\n])|(?=\n#{1,3}\s)/);
+  let buffer = '';
+  for (const part of parts) {
+    buffer += part;
+    if (buffer.length >= 40) {
+      chunks.push(buffer);
+      buffer = '';
     }
-
-    if (body.message.length > 2000) {
-      return c.json({ error: 'message exceeds maximum length (2000 chars)' }, 400);
-    }
-
-    if (!c.env.GOOGLE_API_KEY || !c.env.FILE_SEARCH_STORE_NAME) {
-      return c.json({ error: 'Chat service is not configured' }, 503);
-    }
-
-    const db = createDbClient(c.env);
-    await ensureTable(db);
-
-    // Rate limit check
-    const usage = await getUsage(db, body.userId);
-    if (usage.dailyUsed >= DAILY_LIMIT) {
-      return c.json(
-        {
-          error: 'daily_limit_exceeded',
-          message: '本日の送信上限に達しました',
-          usage,
-        },
-        429
-      );
-    }
-    if (usage.monthlyUsed >= MONTHLY_LIMIT) {
-      return c.json(
-        {
-          error: 'monthly_limit_exceeded',
-          message: '今月の送信上限に達しました',
-          usage,
-        },
-        429
-      );
-    }
-
-    // Cap history length to keep input tokens bounded
-    const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
-
-    const reply = await callGemini({
-      apiKey: c.env.GOOGLE_API_KEY,
-      model: c.env.GEMINI_MODEL || DEFAULT_MODEL,
-      fileSearchStoreName: c.env.FILE_SEARCH_STORE_NAME,
-      message: body.message,
-      history,
-      questionContext: body.questionContext,
-    });
-
-    await incrementUsage(db, body.userId);
-
-    const newUsage: ChatUsage = {
-      ...usage,
-      dailyUsed: usage.dailyUsed + 1,
-      monthlyUsed: usage.monthlyUsed + 1,
-    };
-
-    const response: ChatResponse = { reply, usage: newUsage };
-    return c.json(response);
-  } catch (error) {
-    console.error('Chat error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return c.json({ error: 'chat_failed', message }, 500);
   }
+  if (buffer) chunks.push(buffer);
+  return chunks;
+}
+
+// SSE streaming chat endpoint
+chat.post('/', async (c) => {
+  let body: ChatRequest;
+  try {
+    body = await c.req.json<ChatRequest>();
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  if (!body.userId || !body.message || typeof body.message !== 'string') {
+    return c.json({ error: 'userId and message are required' }, 400);
+  }
+
+  if (body.message.length > 2000) {
+    return c.json({ error: 'message exceeds maximum length (2000 chars)' }, 400);
+  }
+
+  if (!c.env.GOOGLE_API_KEY || !c.env.FILE_SEARCH_STORE_NAME) {
+    return c.json({ error: 'Chat service is not configured' }, 503);
+  }
+
+  const db = createDbClient(c.env);
+  await ensureTable(db);
+
+  // Rate limit check (before SSE starts so we can return normal JSON errors)
+  const usage = await getUsage(db, body.userId);
+  if (usage.dailyUsed >= DAILY_LIMIT) {
+    return c.json(
+      { error: 'daily_limit_exceeded', message: '本日の送信上限に達しました', usage },
+      429
+    );
+  }
+  if (usage.monthlyUsed >= MONTHLY_LIMIT) {
+    return c.json(
+      { error: 'monthly_limit_exceeded', message: '今月の送信上限に達しました', usage },
+      429
+    );
+  }
+
+  const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+
+  return streamSSE(c, async (stream) => {
+    try {
+      const reply = await callGemini({
+        apiKey: c.env.GOOGLE_API_KEY,
+        model: c.env.GEMINI_MODEL || DEFAULT_MODEL,
+        fileSearchStoreName: c.env.FILE_SEARCH_STORE_NAME,
+        message: body.message,
+        history,
+        questionContext: body.questionContext,
+      });
+
+      await incrementUsage(db, body.userId);
+
+      const newUsage: ChatUsage = {
+        ...usage,
+        dailyUsed: usage.dailyUsed + 1,
+        monthlyUsed: usage.monthlyUsed + 1,
+      };
+
+      // Stream reply in chunks
+      const chunks = splitIntoChunks(reply);
+      for (const chunk of chunks) {
+        await stream.writeSSE({
+          event: 'chunk',
+          data: JSON.stringify({ text: chunk }),
+        });
+        await stream.sleep(CHUNK_DELAY_MS);
+      }
+
+      // Final event with usage
+      await stream.writeSSE({
+        event: 'done',
+        data: JSON.stringify({ usage: newUsage }),
+      });
+    } catch (error) {
+      console.error('Chat SSE error:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      await stream.writeSSE({
+        event: 'error',
+        data: JSON.stringify({ message }),
+      });
+    }
+  });
 });
 
 // Get current usage without sending a message
