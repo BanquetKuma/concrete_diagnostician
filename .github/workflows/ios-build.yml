@@ -56,16 +56,17 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
           CERT_PATH=$RUNNER_TEMP/distribution.p12
-          echo -n "$DISTRIBUTION_CERT_BASE64" | base64 --decode -o $CERT_PATH
+          printf '%s' "$DISTRIBUTION_CERT_BASE64" | base64 --decode -o $CERT_PATH
           security import $CERT_PATH -P "$DISTRIBUTION_CERT_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
           PP_PATH=$RUNNER_TEMP/profile.mobileprovision
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          printf '%s' "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
+          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
       - name: Install CocoaPods
         run: |
@@ -82,14 +83,13 @@ jobs:
             -sdk iphoneos \
             archive \
             CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}" \
+            PROVISIONING_PROFILE_SPECIFIER="$PP_UUID" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
 
       - name: Export IPA
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          PP_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -109,7 +109,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.banquetkuma.concretediagnostician</key>
-              <string>${PP_NAME}</string>
+              <string>${PP_UUID}</string>
             </dict>
           </dict>
           </plist>
