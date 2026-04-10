@@ -43,6 +43,21 @@ jobs:
       - name: Prebuild iOS
         run: npx expo prebuild --platform ios --clean
 
+      - name: Detect Xcode workspace and scheme
+        run: |
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace 2>/dev/null | head -1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "::error::No .xcworkspace found in ios/"
+            ls -la
+            exit 1
+          fi
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "Detected workspace: $WORKSPACE"
+          echo "Detected scheme:    $SCHEME"
+          echo "XCODE_WORKSPACE=$WORKSPACE" >> $GITHUB_ENV
+          echo "XCODE_SCHEME=$SCHEME" >> $GITHUB_ENV
+
       - name: Decode signing certificate
         env:
           DISTRIBUTION_CERT_BASE64: ${{ secrets.DISTRIBUTION_CERT_BASE64 }}
@@ -76,10 +91,10 @@ jobs:
       - name: Build iOS archive
         run: |
           cd ios
-          xcodebuild -workspace concretediagnostician.xcworkspace \
-            -scheme concretediagnostician \
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/concretediagnostician.xcarchive \
+            -archivePath $RUNNER_TEMP/app.xcarchive \
             -sdk iphoneos \
             archive \
             CODE_SIGN_STYLE=Manual \
@@ -116,7 +131,7 @@ jobs:
           EOF
 
           xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/concretediagnostician.xcarchive \
+            -archivePath $RUNNER_TEMP/app.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath $RUNNER_TEMP/export
 
