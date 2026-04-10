@@ -1,0 +1,131 @@
+name: iOS Production Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: 'Upload to App Store Connect after build (use local eas submit instead)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Set environment variables
+        run: |
+          echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}" >> .env
+          echo "EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=${{ secrets.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS }}" >> .env
+
+      - name: Prebuild iOS
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Decode signing certificate
+        env:
+          DISTRIBUTION_CERT_BASE64: ${{ secrets.DISTRIBUTION_CERT_BASE64 }}
+          DISTRIBUTION_CERT_PASSWORD: ${{ secrets.DISTRIBUTION_CERT_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ci_keychain_password_2026
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          CERT_PATH=$RUNNER_TEMP/distribution.p12
+          echo -n "$DISTRIBUTION_CERT_BASE64" | base64 --decode -o $CERT_PATH
+          security import $CERT_PATH -P "$DISTRIBUTION_CERT_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS archive
+        run: |
+          cd ios
+          xcodebuild -workspace concretediagnostician.xcworkspace \
+            -scheme concretediagnostician \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/concretediagnostician.xcarchive \
+            -sdk iphoneos \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+
+      - name: Export IPA
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PP_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.banquetkuma.concretediagnostician</key>
+              <string>${PP_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/concretediagnostician.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/export
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: concrete-diagnostician-ios
+          path: ${{ runner.temp }}/export/*.ipa
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
