@@ -1,12 +1,42 @@
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 
+const LOADING_STEPS = [
+  { text: '教科書を検索中...', delay: 0 },
+  { text: '関連する内容を抽出中...', delay: 3000 },
+  { text: '回答を生成中...', delay: 7000 },
+];
+
 interface Props {
   message: ChatMessageType;
+}
+
+/**
+ * Animated step indicator shown while waiting for the first SSE chunk.
+ */
+function LoadingSteps({ color }: { color: string }) {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    const timers = LOADING_STEPS.slice(1).map((step, i) =>
+      setTimeout(() => setStepIndex(i + 1), step.delay)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="small" color={color} style={styles.spinner} />
+      <ThemedText style={[styles.loadingText, { color }]}>
+        {LOADING_STEPS[stepIndex].text}
+      </ThemedText>
+    </View>
+  );
 }
 
 export function ChatMessage({ message }: Props) {
@@ -20,13 +50,22 @@ export function ChatMessage({ message }: Props) {
 
   const textColor = isUser ? '#fff' : palette.text;
 
-  // User messages: plain text. Assistant messages: Markdown.
+  // User messages: plain text
   if (isUser) {
     return (
       <View style={[styles.bubble, bubbleStyle]}>
         <ThemedText style={[styles.text, { color: textColor }]}>
           {message.content}
         </ThemedText>
+      </View>
+    );
+  }
+
+  // Assistant message: empty content = loading, otherwise Markdown
+  if (message.content === '') {
+    return (
+      <View style={[styles.bubble, bubbleStyle]}>
+        <LoadingSteps color={palette.tint} />
       </View>
     );
   }
@@ -103,5 +142,18 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  spinner: {
+    transform: [{ scale: 0.8 }],
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
