@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -71,6 +72,21 @@ export default function ChatScreen() {
     sendMessage(text, questionContext);
   };
 
+  const handleClearSession = () => {
+    Alert.alert(
+      'セッションをクリア',
+      '現在の会話履歴とコンテキストをすべて削除します。よろしいですか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: 'クリア',
+          style: 'destructive',
+          onPress: () => resetConversation(),
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]} edges={['top']}>
       <KeyboardAvoidingView
@@ -90,11 +106,11 @@ export default function ChatScreen() {
             </View>
             {messages.length > 0 && (
               <Pressable
-                onPress={resetConversation}
-                style={[styles.newChatButton, { borderColor: palette.tint }]}
+                onPress={handleClearSession}
+                style={[styles.newChatButton, { borderColor: '#d9534f' }]}
               >
-                <ThemedText style={[styles.newChatButtonText, { color: palette.tint }]}>
-                  新しい会話
+                <ThemedText style={[styles.newChatButtonText, { color: '#d9534f' }]}>
+                  セッションをクリア
                 </ThemedText>
               </Pressable>
             )}

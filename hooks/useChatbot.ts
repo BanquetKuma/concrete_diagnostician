@@ -5,9 +5,32 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { apiClient } from '@/lib/api/client';
 import type { ChatMessage, ChatUsage } from '@/lib/types';
 import { useUserContext } from '@/contexts/UserContext';
+
+const USER_ID_KEY = 'concrete_diagnostician_user_id';
+const DEVICE_ID_KEY = 'concrete_diagnostician_device_id';
+
+/**
+ * Resolve a stable user identifier for the chat API even when the
+ * UserContext has not finished initialising (e.g. the user opens the
+ * chat right after app launch). Falls back to the stored user id, then
+ * the device id.
+ */
+async function resolveUserId(contextUserId: string | undefined): Promise<string | null> {
+  if (contextUserId) return contextUserId;
+  try {
+    const stored = await SecureStore.getItemAsync(USER_ID_KEY);
+    if (stored) return stored;
+    const device = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+    if (device) return `device_${device}`;
+  } catch {
+    // Ignore SecureStore errors
+  }
+  return null;
+}
 
 export interface UseChatbotResult {
   messages: ChatMessage[];
@@ -29,10 +52,12 @@ export function useChatbot(): UseChatbotResult {
   const streamRef = useRef<{ close: () => void } | null>(null);
 
   const sendMessage = useCallback(
-    (text: string, questionContext?: string) => {
+    async (text: string, questionContext?: string) => {
       const trimmed = text.trim();
       if (!trimmed || isSending) return;
-      if (!user?.id) {
+
+      const userId = await resolveUserId(user?.id);
+      if (!userId) {
         setError('ユーザー情報を取得できませんでした');
         return;
       }
@@ -47,7 +72,7 @@ export function useChatbot(): UseChatbotResult {
       setError(null);
 
       const stream = apiClient.postChatStream(
-        user.id,
+        userId,
         trimmed,
         historyBefore,
         questionContext,
