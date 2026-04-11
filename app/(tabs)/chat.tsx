@@ -14,7 +14,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatEmptyState } from '@/components/chat/ChatEmptyState';
-import { useChatbot } from '@/hooks/useChatbot';
+import { useChatContext } from '@/contexts/ChatContext';
 import { useChatAccess } from '@/hooks/useChatAccess';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -35,7 +35,8 @@ export default function ChatScreen() {
     error,
     rateLimited,
     sendMessage,
-  } = useChatbot();
+    resetConversation,
+  } = useChatContext();
 
   const listRef = useRef<FlatList<ChatMessageType>>(null);
 
@@ -78,12 +79,26 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
-          <ThemedText type="subtitle">AIチャット</ThemedText>
-          {usage && (
-            <ThemedText style={[styles.usageText, { color: palette.icon }]}>
-              本日 {usage.dailyUsed}/{usage.dailyLimit} ・ 今月 {usage.monthlyUsed}/{usage.monthlyLimit}
-            </ThemedText>
-          )}
+          <View style={styles.headerRow}>
+            <View style={styles.headerTitleBlock}>
+              <ThemedText type="subtitle">AIチャット</ThemedText>
+              {usage && (
+                <ThemedText style={[styles.usageText, { color: palette.icon }]}>
+                  本日 {usage.dailyUsed}/{usage.dailyLimit} ・ 今月 {usage.monthlyUsed}/{usage.monthlyLimit}
+                </ThemedText>
+              )}
+            </View>
+            {messages.length > 0 && (
+              <Pressable
+                onPress={resetConversation}
+                style={[styles.newChatButton, { borderColor: palette.tint }]}
+              >
+                <ThemedText style={[styles.newChatButtonText, { color: palette.tint }]}>
+                  新しい会話
+                </ThemedText>
+              </Pressable>
+            )}
+          </View>
         </View>
 
         {questionContext && (
@@ -136,9 +151,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitleBlock: {
+    flex: 1,
+  },
   usageText: {
     fontSize: 12,
     marginTop: 2,
+  },
+  newChatButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  newChatButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   contextBanner: {
     marginHorizontal: 12,

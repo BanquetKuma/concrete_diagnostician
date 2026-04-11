@@ -338,6 +338,47 @@ class ApiClient {
     // Use XMLHttpRequest for streaming SSE over POST in React Native
     const xhr = new XMLHttpRequest();
     let lastIndex = 0;
+    let buffer = '';
+    let doneCalled = false;
+
+    const processBuffer = () => {
+      // SSE events are delimited by a blank line (\n\n).
+      // Keep any incomplete event in the buffer for the next onprogress tick.
+      while (true) {
+        const eventEnd = buffer.indexOf('\n\n');
+        if (eventEnd === -1) break;
+
+        const rawEvent = buffer.substring(0, eventEnd);
+        buffer = buffer.substring(eventEnd + 2);
+
+        let eventType = '';
+        let dataStr = '';
+        for (const line of rawEvent.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            // Concatenate multi-line data values
+            dataStr += line.slice(6);
+          }
+        }
+
+        if (!eventType || !dataStr) continue;
+
+        try {
+          const data = JSON.parse(dataStr);
+          if (eventType === 'chunk' && typeof data.text === 'string') {
+            callbacks.onChunk(data.text);
+          } else if (eventType === 'done' && data.usage) {
+            doneCalled = true;
+            callbacks.onDone(data.usage);
+          } else if (eventType === 'error' && data.message) {
+            callbacks.onError(data.message);
+          }
+        } catch {
+          // Skip malformed events
+        }
+      }
+    };
 
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
@@ -345,36 +386,21 @@ class ApiClient {
     xhr.onprogress = () => {
       const newData = xhr.responseText.substring(lastIndex);
       lastIndex = xhr.responseText.length;
-
-      // Parse SSE lines
-      const lines = newData.split('\n');
-      let currentEvent = '';
-      for (const line of lines) {
-        if (line.startsWith('event: ')) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith('data: ')) {
-          const dataStr = line.slice(6);
-          try {
-            const data = JSON.parse(dataStr);
-            if (currentEvent === 'chunk' && data.text) {
-              callbacks.onChunk(data.text);
-            } else if (currentEvent === 'done' && data.usage) {
-              callbacks.onDone(data.usage);
-            } else if (currentEvent === 'error' && data.message) {
-              callbacks.onError(data.message);
-            }
-          } catch {
-            // Ignore partial JSON
-          }
-        }
-      }
+      buffer += newData;
+      processBuffer();
     };
 
     xhr.onerror = () => {
-      callbacks.onError('ネットワークエラーが発生しました');
+      if (!doneCalled) callbacks.onError('ネットワークエラーが発生しました');
     };
 
     xhr.onloadend = () => {
+      // Flush any remaining buffered data
+      if (buffer.length > 0) {
+        buffer += '\n\n';
+        processBuffer();
+      }
+
       if (xhr.status === 429) {
         try {
           const errData = JSON.parse(xhr.responseText);
@@ -389,6 +415,9 @@ class ApiClient {
         } catch {
           callbacks.onError('送信に失敗しました');
         }
+      } else if (!doneCalled) {
+        // Status OK but no done event received → treat as error so isSending resets
+        callbacks.onError('応答が完了しませんでした');
       }
     };
 

@@ -90,14 +90,17 @@ export async function callGemini(params: GeminiCallParams): Promise<string> {
     throw new Error(`Gemini blocked response: ${data.promptFeedback.blockReason}`);
   }
 
-  const text = data.candidates?.[0]?.content?.parts
+  const rawText = data.candidates?.[0]?.content?.parts
     ?.map((p) => p.text || '')
     .join('')
     .trim();
 
-  if (!text) {
+  if (!rawText) {
     throw new Error('Gemini returned empty response');
   }
 
-  return text;
+  // Clean up non-standard markup that the markdown renderer can't handle:
+  // - <br>, <br/>, <br /> → newline
+  // - Other stray HTML tags are left alone
+  return rawText.replace(/<br\s*\/?>/gi, '\n');
 }

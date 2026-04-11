@@ -11,6 +11,7 @@ import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { UserProvider } from '@/contexts/UserContext';
 import { RevenueCatProvider } from '@/contexts/RevenueCatContext';
+import { ChatProvider } from '@/contexts/ChatContext';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -55,10 +56,12 @@ function AuthGuard() {
   return (
     <UserProvider>
       <RevenueCatProvider clerkUserId={userId}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Slot />
-          <StatusBar style="auto" />
-        </ThemeProvider>
+        <ChatProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Slot />
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </ChatProvider>
       </RevenueCatProvider>
     </UserProvider>
   );

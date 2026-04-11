@@ -275,18 +275,36 @@ export default function SubscriptionScreen() {
             </>
           )}
 
-          {/* Restore Purchases */}
-          {!hasPaidPlan && (
-            <TouchableOpacity
-              style={styles.restoreButton}
-              onPress={handleRestore}
-              disabled={isLoading}
-            >
-              <ThemedText style={styles.restoreButtonText}>
-                購入を復元する
+          {/* Manage Subscription (Premium members) */}
+          {isPremiumMember && (
+            <View style={[styles.manageCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <ThemedText type="defaultSemiBold" style={styles.manageTitle}>
+                サブスクリプションの管理
               </ThemedText>
-            </TouchableOpacity>
+              <ThemedText style={[styles.manageDescription, { color: colors.icon }]}>
+                プランの変更や解約は、Appleのサブスクリプション管理画面から行えます。
+              </ThemedText>
+              <TouchableOpacity
+                style={[styles.manageButton, { borderColor: '#6366F1' }]}
+                onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')}
+              >
+                <ThemedText style={[styles.manageButtonText, { color: '#6366F1' }]}>
+                  サブスクリプションを管理
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           )}
+
+          {/* Restore Purchases — always visible (shared between Pro and Premium) */}
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestore}
+            disabled={isLoading}
+          >
+            <ThemedText style={styles.restoreButtonText}>
+              購入を復元する
+            </ThemedText>
+          </TouchableOpacity>
 
           {/* Legal Links */}
           <View style={styles.legalSection}>
@@ -465,6 +483,31 @@ const styles = StyleSheet.create({
   noOfferingText: {
     opacity: 0.6,
     textAlign: 'center',
+  },
+  manageCard: {
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  manageTitle: {
+    fontSize: 16,
+  },
+  manageDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  manageButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  manageButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   restoreButton: {
     padding: 16,
