@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   Alert,
   FlatList,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -48,6 +49,17 @@ export default function ChatScreen() {
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
     }
   }, [messages.length]);
+
+  // When user returns to this tab (e.g. from another tab or a question
+  // screen), scroll to the latest message. This matters when streaming
+  // continued while the tab was blurred so the list needs to catch up.
+  useFocusEffect(
+    useCallback(() => {
+      if (messages.length > 0) {
+        setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 100);
+      }
+    }, [messages.length])
+  );
 
   // Premium gate
   if (!accessLoading && !canAccessChat) {
@@ -150,12 +162,14 @@ export default function ChatScreen() {
           </ThemedText>
         )}
 
-        <ChatInput
-          onSend={handleSend}
-          isSending={isSending}
-          disabled={rateLimited}
-          placeholder={rateLimited ? '上限に達しました' : '質問を入力...'}
-        />
+        <View style={{ marginBottom: tabBarHeight }}>
+          <ChatInput
+            onSend={handleSend}
+            isSending={isSending}
+            disabled={rateLimited}
+            placeholder={rateLimited ? '上限に達しました' : '質問を入力...'}
+          />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
