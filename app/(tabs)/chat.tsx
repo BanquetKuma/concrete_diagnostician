@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ChatMessage } from '@/components/chat/ChatMessage';
@@ -27,6 +28,7 @@ export default function ChatScreen() {
   const palette = Colors[scheme];
   const params = useLocalSearchParams<{ context?: string }>();
   const questionContext = typeof params.context === 'string' ? params.context : undefined;
+  const tabBarHeight = useBottomTabBarHeight();
 
   const { canAccessChat, isLoading: accessLoading } = useChatAccess();
   const {
@@ -92,7 +94,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? tabBarHeight : 0}
       >
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
           <View style={styles.headerRow}>

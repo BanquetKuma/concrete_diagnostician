@@ -23,6 +23,7 @@ import { Colors } from '@/constants/Colors';
 import { useQuestionAccess } from '@/hooks/useQuestionAccess';
 import { useChatAccess } from '@/hooks/useChatAccess';
 import { getCategoryLabel } from '@/constants/Categories';
+import { buildQuestionContext } from '@/lib/chat/buildQuestionContext';
 
 export default function QuestionScreen() {
   const { year, questionId } = useLocalSearchParams<{
@@ -54,11 +55,12 @@ export default function QuestionScreen() {
       router.push('/(tabs)/subscription');
       return;
     }
+    const context = buildQuestionContext(question, selectedChoiceId, isAnswered);
     router.push({
       pathname: '/(tabs)/chat',
-      params: { context: question.text },
+      params: { context },
     });
-  }, [question, canAccessChat, router]);
+  }, [question, selectedChoiceId, isAnswered, canAccessChat, router]);
 
   useEffect(() => {
     const fetchQuestion = async () => {
