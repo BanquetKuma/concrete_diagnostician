@@ -146,16 +146,82 @@ export default function SubscriptionScreen() {
             </View>
           )}
 
-          {/* ===== Premium Plan Section ===== */}
-          {/* Show to: free users, or Pro-only users who want to upgrade */}
+          {/* ===== Pro Plan Section (shown first, lower commitment) ===== */}
+          {!isProMember && (
+            <>
+              <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View style={styles.planHeader}>
+                  <ThemedText type="subtitle" style={styles.benefitsTitle}>
+                    Proプランの特典
+                  </ThemedText>
+                  <View style={[styles.recommendBadge, { backgroundColor: '#0a7ea4' }]}>
+                    <ThemedText style={styles.recommendBadgeText}>おすすめ</ThemedText>
+                  </View>
+                </View>
+                <View style={styles.benefitsList}>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>全250問にアクセス可能（無料版は約100問）</ThemedText>
+                  </View>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>各分野の応用・発展問題を学習</ThemedText>
+                  </View>
+                  <View style={styles.benefitItem}>
+                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
+                    <ThemedText style={styles.benefitText}>広告なしで快適に学習</ThemedText>
+                  </View>
+                </View>
+              </View>
+
+              {/* Pro Pricing */}
+              {offerings && (
+                <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#0a7ea4' }]}>
+                  <ThemedText type="subtitle" style={styles.pricingTitle}>
+                    買い切りプラン（Pro）
+                  </ThemedText>
+                  {offerings.lifetime ? (
+                    <>
+                      <ThemedView style={styles.priceContainer}>
+                        <ThemedText
+                          style={styles.price}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                        >
+                          {offerings.lifetime.product.priceString}
+                        </ThemedText>
+                        <ThemedText style={styles.pricePeriod}>（税込・買い切り）</ThemedText>
+                      </ThemedView>
+                      <ThemedText style={styles.priceNote}>一度のお支払いで永久にご利用いただけます</ThemedText>
+                      <TouchableOpacity
+                        style={[styles.purchaseButton, isLoading && styles.disabledButton]}
+                        onPress={handlePurchasePro}
+                        disabled={isLoading}
+                      >
+                        <ThemedText style={styles.purchaseButtonText}>
+                          {isLoading ? '処理中...' : '購入する'}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <ThemedText style={styles.noOfferingText}>
+                      現在購入可能なプランがありません
+                    </ThemedText>
+                  )}
+                </View>
+              )}
+            </>
+          )}
+
+          {/* ===== Premium Plan Section (shown below Pro as an upsell) ===== */}
           {!isPremiumMember && (
             <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.planHeader}>
                 <ThemedText type="subtitle" style={styles.benefitsTitle}>
                   Premiumプランの特典
                 </ThemedText>
-                <View style={styles.recommendBadge}>
-                  <ThemedText style={styles.recommendBadgeText}>おすすめ</ThemedText>
+                <View style={[styles.recommendBadge, { backgroundColor: '#6366F1' }]}>
+                  <ThemedText style={styles.recommendBadgeText}>フル機能</ThemedText>
                 </View>
               </View>
               <View style={styles.benefitsList}>
@@ -210,69 +276,6 @@ export default function SubscriptionScreen() {
                 </ThemedText>
               )}
             </View>
-          )}
-
-          {/* ===== Pro Plan Section ===== */}
-          {/* Show to: free users only (Pro/Premium members already have Pro access) */}
-          {!isProMember && (
-            <>
-              <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <ThemedText type="subtitle" style={styles.benefitsTitle}>
-                  Proプランの特典
-                </ThemedText>
-                <View style={styles.benefitsList}>
-                  <View style={styles.benefitItem}>
-                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                    <ThemedText style={styles.benefitText}>全250問にアクセス可能（無料版は約100問）</ThemedText>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                    <ThemedText style={styles.benefitText}>各分野の応用・発展問題を学習</ThemedText>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <ThemedText style={styles.benefitIcon}>✓</ThemedText>
-                    <ThemedText style={styles.benefitText}>広告なしで快適に学習</ThemedText>
-                  </View>
-                </View>
-              </View>
-
-              {/* Pro Pricing */}
-              {offerings && (
-                <View style={[styles.pricingCard, { backgroundColor: colors.card, borderColor: '#0a7ea4' }]}>
-                  <ThemedText type="subtitle" style={styles.pricingTitle}>
-                    買い切りプラン（Pro）
-                  </ThemedText>
-                  {offerings.lifetime ? (
-                    <>
-                      <ThemedView style={styles.priceContainer}>
-                        <ThemedText
-                          style={styles.price}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                        >
-                          {offerings.lifetime.product.priceString}
-                        </ThemedText>
-                        <ThemedText style={styles.pricePeriod}>（税込・買い切り）</ThemedText>
-                      </ThemedView>
-                      <ThemedText style={styles.priceNote}>一度のお支払いで永久にご利用いただけます</ThemedText>
-                      <TouchableOpacity
-                        style={[styles.purchaseButton, isLoading && styles.disabledButton]}
-                        onPress={handlePurchasePro}
-                        disabled={isLoading}
-                      >
-                        <ThemedText style={styles.purchaseButtonText}>
-                          {isLoading ? '処理中...' : '購入する'}
-                        </ThemedText>
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    <ThemedText style={styles.noOfferingText}>
-                      現在購入可能なプランがありません
-                    </ThemedText>
-                  )}
-                </View>
-              )}
-            </>
           )}
 
           {/* Manage Subscription (Premium members) */}

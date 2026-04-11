@@ -45,8 +45,17 @@ export function ChatMessage({ message }: Props) {
   const palette = Colors[scheme];
 
   const bubbleStyle = isUser
-    ? { backgroundColor: palette.tint, alignSelf: 'flex-end' as const }
-    : { backgroundColor: palette.card, alignSelf: 'flex-start' as const, borderWidth: 1, borderColor: palette.border };
+    ? {
+        backgroundColor: palette.tint,
+        alignSelf: 'flex-end' as const,
+        maxWidth: '85%' as const,
+      }
+    : {
+        backgroundColor: palette.card,
+        alignSelf: 'stretch' as const,
+        borderWidth: 1,
+        borderColor: palette.border,
+      };
 
   const textColor = isUser ? '#fff' : palette.text;
 
@@ -133,7 +142,6 @@ export function ChatMessage({ message }: Props) {
 
 const styles = StyleSheet.create({
   bubble: {
-    maxWidth: '85%',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 16,
