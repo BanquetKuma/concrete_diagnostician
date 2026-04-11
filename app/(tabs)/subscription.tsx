@@ -150,14 +150,9 @@ export default function SubscriptionScreen() {
           {!isProMember && (
             <>
               <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <View style={styles.planHeader}>
-                  <ThemedText type="subtitle" style={styles.benefitsTitle}>
-                    Proプランの特典
-                  </ThemedText>
-                  <View style={[styles.recommendBadge, { backgroundColor: '#0a7ea4' }]}>
-                    <ThemedText style={styles.recommendBadgeText}>おすすめ</ThemedText>
-                  </View>
-                </View>
+                <ThemedText type="subtitle" style={styles.benefitsTitle}>
+                  Proプランの特典
+                </ThemedText>
                 <View style={styles.benefitsList}>
                   <View style={styles.benefitItem}>
                     <ThemedText style={styles.benefitIcon}>✓</ThemedText>
@@ -220,8 +215,8 @@ export default function SubscriptionScreen() {
                 <ThemedText type="subtitle" style={styles.benefitsTitle}>
                   Premiumプランの特典
                 </ThemedText>
-                <View style={[styles.recommendBadge, { backgroundColor: '#6366F1' }]}>
-                  <ThemedText style={styles.recommendBadgeText}>フル機能</ThemedText>
+                <View style={styles.recommendBadge}>
+                  <ThemedText style={styles.recommendBadgeText}>おすすめ</ThemedText>
                 </View>
               </View>
               <View style={styles.benefitsList}>
