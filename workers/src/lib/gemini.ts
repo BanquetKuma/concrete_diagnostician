@@ -23,6 +23,9 @@ interface GeminiRequestBody {
   }>;
   generationConfig?: {
     temperature?: number;
+    thinkingConfig?: {
+      thinkingBudget?: number;
+    };
   };
 }
 
@@ -72,7 +75,10 @@ export async function callGemini(params: GeminiCallParams): Promise<string> {
         },
       },
     ],
-    generationConfig: { temperature: 0.7 },
+    generationConfig: {
+      temperature: 0.7,
+      thinkingConfig: { thinkingBudget: 1024 },
+    },
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;

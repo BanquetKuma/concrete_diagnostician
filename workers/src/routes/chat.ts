@@ -132,6 +132,7 @@ chat.post('/', async (c) => {
     );
   }
 
+  // Keep last 5 exchanges (10 messages) to reduce input tokens and latency
   const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
 
   return streamSSE(c, async (stream) => {
