@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -30,6 +31,13 @@ export default function ChatScreen() {
   const params = useLocalSearchParams<{ context?: string }>();
   const questionContext = typeof params.context === 'string' ? params.context : undefined;
   const tabBarHeight = useBottomTabBarHeight();
+
+  // Manage context locally so it can be cleared independently of messages.
+  // Re-set when user navigates here from a new question screen.
+  const [activeContext, setActiveContext] = useState<string | undefined>(questionContext);
+  useEffect(() => {
+    if (questionContext) setActiveContext(questionContext);
+  }, [questionContext]);
 
   const { canAccessChat, isLoading: accessLoading } = useChatAccess();
   const {
@@ -83,7 +91,11 @@ export default function ChatScreen() {
   }
 
   const handleSend = (text: string) => {
-    sendMessage(text, questionContext);
+    sendMessage(text, activeContext);
+  };
+
+  const handleClearContext = () => {
+    setActiveContext(undefined);
   };
 
   const handleClearSession = () => {
@@ -95,7 +107,10 @@ export default function ChatScreen() {
         {
           text: 'クリア',
           style: 'destructive',
-          onPress: () => resetConversation(),
+          onPress: () => {
+            resetConversation();
+            setActiveContext(undefined);
+          },
         },
       ]
     );
@@ -131,13 +146,18 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {questionContext && (
+        {activeContext && (
           <View style={[styles.contextBanner, { backgroundColor: palette.card, borderColor: palette.border }]}>
-            <ThemedText style={[styles.contextLabel, { color: palette.icon }]}>
-              関連する問題のコンテキスト付き
-            </ThemedText>
+            <View style={styles.contextHeader}>
+              <ThemedText style={[styles.contextLabel, { color: palette.icon }]}>
+                関連する問題のコンテキスト付き
+              </ThemedText>
+              <Pressable onPress={handleClearContext} hitSlop={8}>
+                <ThemedText style={[styles.contextCloseButton, { color: palette.icon }]}>✕ 解除</ThemedText>
+              </Pressable>
+            </View>
             <ThemedText numberOfLines={2} style={styles.contextText}>
-              {questionContext}
+              {activeContext}
             </ThemedText>
           </View>
         )}
@@ -148,8 +168,10 @@ export default function ChatScreen() {
           keyExtractor={(_, idx) => String(idx)}
           renderItem={({ item }) => <ChatMessage message={item} />}
           contentContainerStyle={styles.listContent}
+          keyboardDismissMode="on-drag"
+          onScrollBeginDrag={Keyboard.dismiss}
           ListEmptyComponent={
-            <ChatEmptyState onSuggestionPress={(t) => sendMessage(t, questionContext)} />
+            <ChatEmptyState onSuggestionPress={(t) => sendMessage(t, activeContext)} />
           }
         />
 
@@ -169,6 +191,11 @@ export default function ChatScreen() {
             disabled={rateLimited}
             placeholder={rateLimited ? '上限に達しました' : '質問を入力...'}
           />
+          <Pressable onPress={Keyboard.dismiss} style={styles.keyboardHint}>
+            <ThemedText style={[styles.keyboardHintText, { color: palette.icon }]}>
+              画面をスクロールまたはタップでキーボードを閉じる
+            </ThemedText>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -212,13 +239,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
   },
+  contextHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
   contextLabel: {
     fontSize: 11,
-    marginBottom: 2,
+  },
+  contextCloseButton: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   contextText: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  keyboardHint: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  keyboardHintText: {
+    fontSize: 11,
   },
   listContent: {
     padding: 12,
