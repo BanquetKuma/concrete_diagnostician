@@ -152,8 +152,12 @@ export default function ChatScreen() {
               <ThemedText style={[styles.contextLabel, { color: palette.icon }]}>
                 関連する問題のコンテキスト付き
               </ThemedText>
-              <Pressable onPress={handleClearContext} hitSlop={8}>
-                <ThemedText style={[styles.contextCloseButton, { color: palette.icon }]}>✕ 解除</ThemedText>
+              <Pressable
+                onPress={handleClearContext}
+                hitSlop={8}
+                style={[styles.contextClearPressable, { borderColor: '#d9534f' }]}
+              >
+                <ThemedText style={styles.contextCloseButton}>✕ コンテキストを解除</ThemedText>
               </Pressable>
             </View>
             <ThemedText numberOfLines={2} style={styles.contextText}>
@@ -248,9 +252,16 @@ const styles = StyleSheet.create({
   contextLabel: {
     fontSize: 11,
   },
+  contextClearPressable: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
   contextCloseButton: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#d9534f',
   },
   contextText: {
     fontSize: 13,
