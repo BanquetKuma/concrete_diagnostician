@@ -99,8 +99,11 @@ export async function callGemini(params: GeminiCallParams): Promise<string> {
     throw new Error('Gemini returned empty response');
   }
 
-  // Clean up non-standard markup that the markdown renderer can't handle:
+  // Clean up markup that causes display issues:
   // - <br>, <br/>, <br /> → newline
-  // - Other stray HTML tags are left alone
-  return rawText.replace(/<br\s*\/?>/gi, '\n');
+  // - ** bold markers → remove (react-native-markdown-display doesn't
+  //   reliably render them with Japanese text / streaming chunks)
+  return rawText
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\*\*/g, '');
 }
