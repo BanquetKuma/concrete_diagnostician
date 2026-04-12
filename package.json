@@ -72,6 +72,7 @@
     "@azure/search-documents": "^12.1.0",
     "@azure/storage-blob": "^12.24.0",
     "@babel/core": "^7.25.2",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.14.0",
     "@types/react": "~19.1.10",
     "dotenv": "^16.4.5",

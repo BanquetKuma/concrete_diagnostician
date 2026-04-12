@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import MarkdownIt from 'markdown-it';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
+
+// Disable typographer to prevent (C) → © , (R) → ® , (TM) → ™
+const markdownItInstance = MarkdownIt({ typographer: false });
 
 const LOADING_STEPS = [
   { text: '教科書を検索中...', delay: 0 },
@@ -135,7 +139,7 @@ export function ChatMessage({ message }: Props) {
 
   return (
     <View style={[styles.bubble, bubbleStyle]}>
-      <Markdown style={mdStyles}>{message.content}</Markdown>
+      <Markdown style={mdStyles} markdownit={markdownItInstance}>{message.content}</Markdown>
     </View>
   );
 }
