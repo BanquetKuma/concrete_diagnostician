@@ -33,10 +33,14 @@ export default function ChatScreen() {
   const tabBarHeight = useBottomTabBarHeight();
 
   // Manage context locally so it can be cleared independently of messages.
-  // Re-set when user navigates here from a new question screen.
+  // When navigating from a question screen, reset the conversation so old
+  // unrelated messages don't pollute the new context.
   const [activeContext, setActiveContext] = useState<string | undefined>(questionContext);
   useEffect(() => {
-    if (questionContext) setActiveContext(questionContext);
+    if (questionContext) {
+      resetConversation();
+      setActiveContext(questionContext);
+    }
   }, [questionContext]);
 
   const { canAccessChat, isLoading: accessLoading } = useChatAccess();
