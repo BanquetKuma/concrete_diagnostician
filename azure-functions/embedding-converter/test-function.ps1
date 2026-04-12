@@ -17,7 +17,7 @@
 #>
 
 param(
-    [string]$FunctionUrl = "https://concrete-embedding-converter.azurewebsites.net/api/embedding?code=x_9QYAPrxMSN-hmB9VxQIiCFYlnGXfDdXdQ1CV7aRVClAzFuefq1xA==",
+    [string]$FunctionUrl = "https://concrete-embedding-converter.azurewebsites.net/api/embedding?code=YOUR_FUNCTION_KEY",
     [string]$TestText = "コンクリート診断士試験のテスト文章です。"
 )
 

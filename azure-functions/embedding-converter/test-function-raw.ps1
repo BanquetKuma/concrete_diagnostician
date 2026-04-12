@@ -2,7 +2,7 @@
 # This script captures the raw JSON to see actual data types
 
 param(
-    [string]$FunctionUrl = "https://concrete-embedding-converter.azurewebsites.net/api/embedding?code=x_9QYAPrxMSN-hmB9VxQIiCFYlnGXfDdXdQ1CV7aRVClAzFuefq1xA==",
+    [string]$FunctionUrl = "https://concrete-embedding-converter.azurewebsites.net/api/embedding?code=YOUR_FUNCTION_KEY",
     [string]$TestText = "Test text for concrete diagnostician exam"
 )
 
