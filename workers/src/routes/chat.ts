@@ -12,8 +12,8 @@ export interface ChatEnv {
   GEMINI_MODEL?: string;
 }
 
-const DAILY_LIMIT = 15;
-const MONTHLY_LIMIT = 300;
+const DAILY_LIMIT = 10;
+const MONTHLY_LIMIT = 150;
 const DEFAULT_MODEL = 'gemini-2.5-pro';
 const CHUNK_DELAY_MS = 30;
 

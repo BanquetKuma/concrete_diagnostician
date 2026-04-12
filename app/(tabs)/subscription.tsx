@@ -230,7 +230,7 @@ export default function SubscriptionScreen() {
                 </View>
                 <View style={styles.benefitItem}>
                   <ThemedText style={[styles.benefitIcon, { color: '#6366F1' }]}>✓</ThemedText>
-                  <ThemedText style={styles.benefitText}>1日15通・月300通まで質問可能</ThemedText>
+                  <ThemedText style={styles.benefitText}>1日10通・月150通まで質問可能</ThemedText>
                 </View>
               </View>
             </View>
