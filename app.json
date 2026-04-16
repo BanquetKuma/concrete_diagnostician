@@ -2,7 +2,7 @@
   "expo": {
     "name": "コンクリート診断士試験対策",
     "slug": "concrete-diagnostician",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "concretediagnostician",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.banquetkuma.concretediagnostician",
-      "buildNumber": "22",
+      "buildNumber": "23",
       "infoPlist": {
         "CFBundleDisplayName": "診断士試験対策",
         "NSCameraUsageDescription": "This app does not use the camera.",
